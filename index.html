@@ -337,7 +337,7 @@ function halfB(x,y){
 /* ---------- multiplayer: PvP fleet battles over peer-to-peer room codes ----------
    One browser (the host) runs the real simulation. The others send their orders to it and draw what it sends back. */
 const MP={role:null,code:'',net:null,me:null,players:[],started:false,over:null,ev:[],snapT:0,snapN:0,recvAt:0,tHost:0,tPrev:0,rPrev:0,rate:1,shots:null,torps:null,charges:null,planes:null,kin:null,chkT:0,inSplit:false,rec:false};
-const MPV=1, MP_MAXP=4, MP_TOTAL=8, SIDES={A:{name:'Blue',col:0x3f86e0,css:'#3f86e0'},B:{name:'Red',col:0xd8452f,css:'#d8452f'}};
+const MPV=2, MP_MAXP=4, MP_TOTAL=8, SIDES={A:{name:'Blue',col:0x3f86e0,css:'#3f86e0'},B:{name:'Red',col:0xd8452f,css:'#d8452f'}};
 const LOCALNET=/[?&]net=local/.test(location.search);
 const isClient=()=>MP.started&&MP.role==='client';
 function mpCap(n){ return Math.min(3,Math.floor(MP_TOTAL/Math.max(1,n||MP.players.length))); }
@@ -349,18 +349,20 @@ function loadPeerJS(){ return new Promise((res,rej)=>{ if(window.Peer)return res
 async function netOpenHost(code,h){
   if(LOCALNET){ const bc=new BroadcastChannel('dmgctl-'+code),conns=new Set(),T={id:'host',conns,send(to,m){bc.postMessage({to,from:'host',m});},bcast(m){for(const c of conns)T.send(c,m);},close(){T.bcast({t:'close'}); bc.close();}};
     bc.onmessage=e=>{ const d=e.data; if(d.to!=='host')return; if(d.m.t==='hi'){ if(!conns.has(d.from)){conns.add(d.from); h.join(d.from);} return; } if(d.m.t==='bye'){ if(conns.delete(d.from))h.leave(d.from); return; } h.msg(d.from,d.m); }; setTimeout(()=>h.ready(),0); return T; }
-  await loadPeerJS(); const P=new Peer('dmgctl-'+code),conns=new Map();
-  const T={id:'host',conns,send(to,m){ const c=conns.get(to); if(c&&c.open)try{c.send(m);}catch(e){} },bcast(m){ for(const c of conns.values())if(c.open)try{c.send(m);}catch(e){} },close(){ T.bcast({t:'close'}); setTimeout(()=>{try{P.destroy();}catch(e){}},300); }};
+  await loadPeerJS(); const P=new Peer('dmgctl-'+code,PEEROPT),conns=new Map();
+  const T={id:'host',conns,send(to,m){ const c=conns.get(to); if(c&&c.open)try{c.send(m);}catch(e){} },bcast(m){ for(const c of conns.values())if(c.open)try{c.send(m);}catch(e){} },close(){ T.bcast({t:'close'}); setTimeout(()=>{try{P.destroy();}catch(e){}},300); },backlog(){ let m=0; for(const c of conns.values()){ const dc=c.dataChannel,b=(dc?dc.bufferedAmount:0)+(c.bufferSize||0)*16300; if(b>m)m=b; } return m; }};
   P.on('open',()=>h.ready()); P.on('error',e=>h.err(e)); P.on('disconnected',()=>{ try{P.reconnect();}catch(e){} });
-  P.on('connection',c=>{ c.on('open',()=>{ conns.set(c.peer,c); h.join(c.peer); }); c.on('data',m=>h.msg(c.peer,m)); c.on('close',()=>{ if(conns.delete(c.peer))h.leave(c.peer); }); c.on('error',()=>{}); });
+  P.on('connection',c=>{ c.on('open',()=>{ conns.set(c.peer,c); h.join(c.peer); }); c.on('data',m=>h.msg(c.peer,m)); c.on('close',()=>{ if(conns.delete(c.peer))h.leave(c.peer); }); c.on('error',e=>netWarn('host link',e)); });
   return T; }
 async function netOpenClient(code,h){
   if(LOCALNET){ const bc=new BroadcastChannel('dmgctl-'+code),id='c'+Math.random().toString(36).slice(2,8),T={id,send(m){bc.postMessage({to:'host',from:id,m});},close(){T.send({t:'bye'}); bc.close();}};
     bc.onmessage=e=>{ const d=e.data; if(d.to===id)h.msg(d.m); }; setTimeout(()=>{ T.send({t:'hi'}); h.open(); },60); return T; }
-  await loadPeerJS(); const P=new Peer(); let c=null; const T={id:null,send(m){ if(c&&c.open)try{c.send(m);}catch(e){} },close(){ try{P.destroy();}catch(e){} }};
-  P.on('open',id=>{ T.id=id; c=P.connect('dmgctl-'+code,{reliable:true,serialization:'json'}); c.on('open',()=>h.open()); c.on('data',m=>h.msg(m)); c.on('close',()=>h.lost()); c.on('error',()=>{}); });
+  await loadPeerJS(); const P=new Peer(PEEROPT); let c=null; const T={id:null,send(m){ if(c&&c.open)try{c.send(m);}catch(e){} },close(){ try{P.destroy();}catch(e){} }};
+  P.on('open',id=>{ T.id=id; c=P.connect('dmgctl-'+code,{reliable:true,serialization:'binary'}); c.on('open',()=>h.open()); c.on('data',m=>h.msg(m)); c.on('close',()=>h.lost()); c.on('error',e=>netWarn('client link',e)); });
   P.on('error',e=>h.err(e)); return T; }
 const IN_CLAUDE=/claude/i.test(location.hostname);
+const PEEROPT=(()=>{ const m=/[?&]peerhost=([^&]+)/.exec(location.search); if(!m)return {}; const a=decodeURIComponent(m[1]).split(':'); return {host:a[0],port:+a[1]||9000,path:'/',secure:false}; })();
+const netWarn=(w,e)=>{ try{ console.warn('[multiplayer] '+w,e&&e.type,e&&e.message); }catch(x){} };
 function netErrText(e){ const t=e&&e.type; return (IN_CLAUDE&&(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')?'Multiplayer cannot connect from inside the Claude preview. Open the game’s own website to play with friends. ':'')+(t==='peer-unavailable'?'No battle with that code. Check the code and that the host is still waiting.':t==='unavailable-id'?'That room code is taken. Try hosting again.':t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'?'Could not reach the matchmaking server. Your network may be blocking it.':t==='browser-incompatible'?'This browser cannot make peer-to-peer connections.':(e&&e.message)||'Connection failed.'); }
 /* ---------- the lobby ---------- */
 function mpName(){ const v=($('mpName').value||'').trim().slice(0,20); return v||'Captain'; }
@@ -397,7 +399,7 @@ function mpPick(side,ships){ const me=mpMe(); if(!me||MP.started)return; if(side
 function mpCanStart(){ return MP.role==='host'&&MP.players.length>=2&&mpSideCount('A')>0&&mpSideCount('B')>0&&MP.players.every(p=>p.ships.length>0); }
 function mpStart(){ if(!mpCanStart())return; const roster=[]; for(const p of MP.players)for(const c of p.ships)roster.push({cls:c,owner:p.id,side:p.side}); const seed=(Math.random()*2**31)|0; MP.net.bcast({t:'start',roster,seed,players:MP.players}); mpBuild(roster,seed,MP.players); }
 /* both sides build identical ships in the same order from the same random seed, so compartment and part numbers match */
-function mpBuild(R,seed,players){ exitPilot(); exitAA(); if(gun.cam)setGunCam(false); if(replay.on)exitReplay(); endScenario(true); ceaseBattle(true); MP.players=players; MP.over=null; MP.ev=[]; MP.snapN=0; MP.shots=MP.torps=MP.charges=MP.planes=null; MP.rate=1; MP.tHost=0; MP.recvAt=0; MP.dx=null; MP.chkT=1; MP.snapT=0; hideBanner(); if(coach.i>=0){ coach.i=coach.steps.length; coachShow(); } for(const s of gun.live)scene.remove(s.mesh); gun.live.length=0; timeScale=1; $('timeRow').querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.ts==='1'));
+function mpBuild(R,seed,players){ exitPilot(); exitAA(); if(gun.cam)setGunCam(false); if(replay.on)exitReplay(); endScenario(true); ceaseBattle(true); MP.players=players; MP.over=null; MP.ev=[]; MP.snapN=0; MP.shots=MP.torps=MP.charges=MP.planes=null; MP.rate=1; MP.tHost=0; MP.recvAt=0; MP.stall=false; MP.slowT=0; MP.slowSaid=false; MP.dx=null; MP.chkT=1; MP.snapT=0; hideBanner(); if(coach.i>=0){ coach.i=coach.steps.length; coachShow(); } for(const s of gun.live)scene.remove(s.mesh); gun.live.length=0; timeScale=1; $('timeRow').querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.ts==='1'));
   const r0=Math.random; Math.random=mulberry(seed);
   try{ for(const S of FLEET.ships){ disposeShip(S); if(S.sideRing)scene.remove(S.sideRing); } FLEET.ships=[]; zebra=false; selected=null; hoverC=null; simT=0; driftX=driftZ=0; frameVX=frameVZ=0; logEl.innerHTML=''; setDepth(1000,true); sea.targetH=sea.H=1.5; buildWaves();
     selectClass(R[0].cls); buildShip(); fleetInit(); for(let i=1;i<R.length;i++)addFleetShip(R[i].cls,{load:true,quiet:true,mp:true});
@@ -425,20 +427,23 @@ function tgtFrom(r){ if(!r)return null; if(r.s!=null){ const S=FLEET.ships[r.s];
 /* ---------- the host: events, snapshots, orders from the other players ---------- */
 function mpEv(e){ if(MP.rec)MP.ev.push(e); }
 const f32b=a=>b64(new Uint8Array(new Float32Array(a).buffer)), i16b=a=>b64(new Uint8Array(a.buffer)), unF32=s=>new Float32Array(unb64(s).buffer), unI16=s=>new Int16Array(unb64(s).buffer);
-function mpSnap(){ const A=ship,sh=[],q=v=>Math.max(-32767,Math.min(32767,Math.round(v*8))); MP.snapN++; const full=MP.snapN%2===1,crewT=MP.snapN%3===1;
+function mpSnap(){ const A=ship,sh=[],q=v=>Math.max(-32767,Math.min(32767,Math.round(v*8))); MP.snapN++; const compT=MP.snapN%2===1,crewT=MP.snapN%3===1,whole=MP.snapN%30===1;
   for(const S of FLEET.ships){ useShip(S); const o={},L=S.bodies.filter(b=>b.deadT===Infinity),base=(mbOf(S)||L[0]||S.bodies[0]).p;
     o.b=L.map(b=>[b.id,r2(b.p.x),r2(b.p.y),r2(b.p.z),r3(b.q.x),r3(b.q.y),r3(b.q.z),r3(b.q.w),r3(b.sub),b.resting?1:0,r2(b.v.y)]); o.o=[r2(base.x),r2(base.y),r2(base.z)];
     const ct=crewTotals(),gm=gunsManned(); o.u=[r2(S.speed),S.telegraph,r2(S.rudder),S.rudderOrd,r2(S.power),S.steerOK?1:0,S.running||0,S.crew.abandon?1:0,zebra?1:0,S.dc.auto?1:0,S.holdFast?1:0,Math.round(ct.aboard),Math.round(ct.water),Math.round(ct.safe),Math.round(ct.dead),ct.teams,gm.mb,gm.aa,r2(S.vx),r2(S.vz)];
     o.t=S.turrets.map(t=>[r3(t.g.rotation.y),turretManned(t)?1:0,(t.reload||0)<=0?1:0]);
-    if(full){ const n=S.comps.length,fl=new Uint8Array(n*4); for(const c of S.comps){ const i=c.id*4; fl[i]=Math.round(clamp(c.water/c.vol,0,1)*255); fl[i+1]=Math.round(c.fire*255); fl[i+2]=Math.round(c.smoke*255); fl[i+3]=(c.pump?1:0)|(c.valve?2:0)|(c.fighting?4:0); } o.c=b64(fl); }
-    const D=S.debris; if(D.length){ const dp=new Int16Array(D.length*3),dq=new Int8Array(D.length*4); D.forEach((d,i)=>{ const p=d.g.position,g=d.g.quaternion; dp[i*3]=q(p.x-base.x);dp[i*3+1]=q(p.y-base.y);dp[i*3+2]=q(p.z-base.z); dq[i*4]=g.x*127;dq[i*4+1]=g.y*127;dq[i*4+2]=g.z*127;dq[i*4+3]=g.w*127; }); o.dp=i16b(dp); o.dq=b64(new Uint8Array(dq.buffer)); }
+    if(compT){ const n=S.comps.length,fl=new Uint8Array(n*4); for(const c of S.comps){ const i=c.id*4; fl[i]=Math.round(clamp(c.water/c.vol,0,1)*255); fl[i+1]=Math.round(c.fire*255); fl[i+2]=Math.round(c.smoke*255); fl[i+3]=(c.pump?1:0)|(c.valve?2:0)|(c.fighting?4:0); }
+      /* only the compartments that changed since the last update, and all of them every five seconds */
+      const old=S._mpC; if(whole||!old||old.length!==fl.length)o.c=b64(fl); else { const ch=[]; for(let i=0;i<n;i++){ const k=i*4; if(fl[k]!==old[k]||fl[k+1]!==old[k+1]||fl[k+2]!==old[k+2]||fl[k+3]!==old[k+3])ch.push(i&255,i>>8,fl[k],fl[k+1],fl[k+2],fl[k+3]); } if(ch.length)o.cd=b64(new Uint8Array(ch)); } S._mpC=fl; }
+    /* wreckage: only pieces still moving, plus each piece once more as it comes to rest; everything every five seconds */
+    const D=S.debris,sel=[]; D.forEach((d,i)=>{ if(whole||!d.rest||!d._mpR)sel.push(i); }); if(sel.length){ const dp=new Int16Array(sel.length*3),dq=new Int8Array(sel.length*4),dr=new Uint8Array(sel.length),di=new Uint16Array(sel); sel.forEach((j,i)=>{ const d=D[j],p=d.g.position,g=d.g.quaternion; dp[i*3]=q(p.x-base.x);dp[i*3+1]=q(p.y-base.y);dp[i*3+2]=q(p.z-base.z); dq[i*4]=g.x*127;dq[i*4+1]=g.y*127;dq[i*4+2]=g.z*127;dq[i*4+3]=g.w*127; dr[i]=d.rest?1:0; if(d.rest)d._mpR=true; }); o.dp=i16b(dp); o.dq=b64(new Uint8Array(dq.buffer)); o.dr=b64(dr); o.di=b64(new Uint8Array(di.buffer)); }
     if(crewT){ const C=S.crew,live=C.figs.filter(f=>f.state!=='gone'),fp=new Int16Array(live.length*3),fs=new Uint8Array(live.length); live.forEach((f,i)=>{ if(f.state==='deck'&&f.body.deadT===Infinity)f.body.world(f.lx,deckY(f.lx/LH),f.lz,f.wp); fp[i*3]=q(f.wp.x-base.x);fp[i*3+1]=q(f.wp.y-base.y);fp[i*3+2]=q(f.wp.z-base.z); fs[i]=f.state==='deck'?0:1; }); o.f=i16b(fp); o.fs=b64(fs);
       const rp=new Int16Array(C.rafts.length*3); C.rafts.forEach((r,i)=>{rp[i*3]=q(r.p.x-base.x);rp[i*3+1]=q(r.p.y-base.y);rp[i*3+2]=q(r.p.z-base.z);}); o.r=i16b(rp); }
     sh.push(o); }
   useShip(A); const B=ship.battle,shots=[]; for(const s of gun.live)shots.push(s.p.x,s.p.y,s.p.z,s.v.x,s.v.y,s.v.z); for(const T of B.tracers)shots.push(T.p.x,T.p.y,T.p.z,T.v.x,T.v.y,T.v.z);
   const tp=[]; for(const t of B.torps)tp.push(t.p.x,t.p.z,t.h.x,t.h.z,t.spd); const pl=[]; for(const P of B.planes)pl.push(P.p.x,P.p.y,P.p.z,P.v.x,P.v.y,P.v.z);
   return {t:'s',T:r2(simT),dx:r2(driftX),dz:r2(driftZ),fv:[r2(frameVX),r2(frameVZ)],H:sea.targetH,dir:sea.dir,ts:timeScale,sh,st:shots.length?f32b(shots):'',tp:tp.length?f32b(tp):'',pl:pl.length?f32b(pl):'',ev:MP.ev.splice(0)}; }
-function mpHostTick(dtReal){ MP.bgT=performance.now(); MP.snapT-=dtReal; if(MP.snapT<=0){ MP.snapT=1/6; MP.net.bcast(mpSnap()); }
+function mpHostTick(dtReal){ MP.bgT=performance.now(); MP.snapT-=dtReal; if(MP.snapT<=0){ const lag=MP.net.backlog?MP.net.backlog():0; if(lag>256e3){ MP.snapT=.05; MP.slowT=(MP.slowT||0)+dtReal; if(MP.slowT>3&&!MP.slowSaid){ MP.slowSaid=true; mpStatus('A player’s connection is slow. Updates are going out less often until it catches up.'); } } else { MP.snapT=1/6; if(MP.slowSaid&&MP.slowT<=0){ MP.slowSaid=false; mpStatus(''); } MP.slowT=Math.max(0,(MP.slowT||0)-1/6); MP.net.bcast(mpSnap()); } }
   MP.chkT-=dtReal; if(MP.chkT<=0){ MP.chkT=1; mpCheck(); } }
 /* a player whose ship is gone takes over their next ship; the battle ends when one side has nothing left afloat */
 function mpCheck(){ for(const p of MP.players){ const S=FLEET.ships[p.active]; if(!S||!shipAlive(S)||S.crew.abandon){ const n=FLEET.ships.find(x=>x.owner===p.id&&shipAlive(x)&&!x.crew.abandon); if(n&&n!==S){ p.active=n.idx; if(p.id===MP.me)commandShip(n,true); else mpEv({e:'cmd',s:n.idx}); } } }
@@ -485,15 +490,18 @@ function mpApply(m){ const now=performance.now(); if(m.T>MP.tHost&&MP.recvAt){ c
     for(const a of o.b){ const b=S.bodies.find(b=>b.id===a[0]); if(!b)continue; if(!b._tp){ b._tp=new V3(); b._tq=new THREE.Quaternion(); b.p.set(a[1],a[2],a[3]); b.q.set(a[4],a[5],a[6],a[7]).normalize(); } b._tp.set(a[1],a[2],a[3]); b._tq.set(a[4],a[5],a[6],a[7]).normalize(); b.sub=a[8]; b.resting=!!a[9]; b.v.y=a[10]; }
     const u=o.u; S.speed=u[0]; S.telegraph=u[1]; S.rudder=u[2]; S.rudderOrd=u[3]; S.power=u[4]; S.steerOK=!!u[5]; S.running=u[6]; S.crew.abandon=!!u[7]; S.zebra=!!u[8]; if(S===ship)zebra=S.zebra; S.dc.auto=!!u[9]; S.holdFast=!!u[10]; S._ct={aboard:u[11],water:u[12],safe:u[13],dead:u[14],teams:u[15],inside:0}; S._gm={mb:u[16],aa:u[17],heavy:0,light:0}; S.vx=u[18]; S.vz=u[19];
     o.t.forEach((a,j)=>{ const t=S.turrets[j]; if(!t)return; t.g.rotation.y=a[0]; t._man=!!a[1]; t.reload=a[2]?0:1; });
-    if(o.c){ const fl=unb64(o.c); for(const c of S.comps){ const k=c.id*4; c.water=fl[k]/255*c.vol; c.fire=fl[k+1]/255; c.smoke=fl[k+2]/255; c.pump=!!(fl[k+3]&1); c.valve=fl[k+3]&2?(c.valve||{net:1}):null; c.fighting=!!(fl[k+3]&4); } }
+    const setC=(c,a,f,sm,fg)=>{ c.water=a/255*c.vol; c.fire=f/255; c.smoke=sm/255; c.pump=!!(fg&1); c.valve=fg&2?(c.valve||{net:1}):null; c.fighting=!!(fg&4); };
+    if(o.c){ const fl=unb64(o.c); for(const c of S.comps){ const k=c.id*4; setC(c,fl[k],fl[k+1],fl[k+2],fl[k+3]); } }
+    else if(o.cd){ const d=unb64(o.cd); for(let i=0;i+5<d.length;i+=6){ const c=S.comps[d[i]|(d[i+1]<<8)]; if(c)setC(c,d[i+2],d[i+3],d[i+4],d[i+5]); } }
     const bx=o.o[0],by=o.o[1],bz=o.o[2];
-    if(o.dp){ const dp=unI16(o.dp),dq=new Int8Array(unb64(o.dq).buffer); S.debris.forEach((d,j)=>{ if(j*3>=dp.length)return; d.g.visible=true; d.g.position.set(bx+dp[j*3]/8,by+dp[j*3+1]/8,bz+dp[j*3+2]/8); d.g.quaternion.set(dq[j*4]/127,dq[j*4+1]/127,dq[j*4+2]/127,dq[j*4+3]/127).normalize(); }); }
+    if(o.dp){ const dp=unI16(o.dp),dq=new Int8Array(unb64(o.dq).buffer),dr=o.dr?unb64(o.dr):null,di=o.di?new Uint16Array(unb64(o.di).buffer):null,n=dp.length/3; for(let i=0;i<n;i++){ const d=S.debris[di?di[i]:i]; if(!d)continue; d.g.visible=true; d.g.position.set(bx+dp[i*3]/8,by+dp[i*3+1]/8,bz+dp[i*3+2]/8); d.g.quaternion.set(dq[i*4]/127,dq[i*4+1]/127,dq[i*4+2]/127,dq[i*4+3]/127).normalize(); d._cr=!!(dr&&dr[i]); } }
     if(o.f){ S._figs=unI16(o.f); S._fst=unb64(o.fs); S._rafts=unI16(o.r); S._fo=[bx,by,bz]; } });
   useShip(FLEET.active); if(FLEET.active)zebra=!!FLEET.active.zebra;
   MP.shots=m.st?unF32(m.st):null; MP.torps=m.tp?unF32(m.tp):null; MP.planes=m.pl?unF32(m.pl):null; MP.fv=m.fv||[0,0]; MP.ts=m.ts; }
 /* between snapshots the other players' screens glide the ships toward where the host last put them, and fly shells along their arcs */
-function mpClientTick(dt){ const k=1-Math.exp(-dt*8),age=Math.min(.5,(performance.now()-MP.recvAt)/1000);
-  simT=MP.tHost+age*(MP.rate||0); for(const S of FLEET.ships)for(const b of S.bodies){ if(b.deadT!==Infinity||!b._tp)continue; if(b.p.distanceToSquared(b._tp)>400*400){ b.p.copy(b._tp); b.q.copy(b._tq); } else { b.p.lerp(b._tp,k); b.q.slerp(b._tq,k); } b.cache(); }
+function mpClientTick(dt){ const k=1-Math.exp(-dt*8),quiet=(performance.now()-MP.recvAt)/1000,age=Math.min(.5,quiet);
+  if(MP.recvAt&&quiet>4&&!MP.over){ MP.stall=true; showBanner('Waiting for the host… no update for '+Math.round(quiet)+' s'); } else if(MP.stall){ MP.stall=false; if(!MP.over)hideBanner(); }
+  const sT0=simT; simT=MP.tHost+age*(MP.rate||0); const dS=clamp(simT-sT0,0,1),fv0=MP.fv||[0,0]; if(dS>0&&(fv0[0]||fv0[1]))for(const S of FLEET.ships)for(const d of S.debris)if(d._cr){ d.g.position.x-=fv0[0]*dS; d.g.position.z-=fv0[1]*dS; } for(const S of FLEET.ships)for(const b of S.bodies){ if(b.deadT!==Infinity||!b._tp)continue; if(b.p.distanceToSquared(b._tp)>400*400){ b.p.copy(b._tp); b.q.copy(b._tq); } else { b.p.lerp(b._tp,k); b.q.slerp(b._tq,k); } b.cache(); }
   ghostGroup.visible=true; const fv=MP.fv||[0,0],a=age*(MP.rate||0); if(MP.dx!=null){ driftX=MP.dx+fv[0]*a; driftZ=MP.dz+fv[1]*a; }
   const sh=MP.shots,ns=sh?Math.min(GSN,sh.length/6):0; for(let i=0;i<ns;i++){ const o=i*6; gsPos[i*3]=sh[o]+(sh[o+3]-fv[0])*a; gsPos[i*3+1]=sh[o+1]+sh[o+4]*a-4.9*a*a; gsPos[i*3+2]=sh[o+2]+(sh[o+5]-fv[1])*a; } gsGeo.setDrawRange(0,ns); gsGeo.attributes.position.needsUpdate=true; ghostShots.material.size=5;
   const tp=MP.torps,nt=tp?tp.length/5:0; while(ghostTorps.length<nt){ const m=new THREE.Mesh(torpGeo,torpMat); ghostGroup.add(m); ghostTorps.push(m); } ghostTorps.forEach((m,i)=>{ m.visible=i<nt; if(i<nt){ const o=i*5,x=tp[o]+(tp[o+2]*tp[o+4]-fv[0])*a,z=tp[o+1]+(tp[o+3]*tp[o+4]-fv[1])*a; m.position.set(x,-2.6,z); m.rotation.y=-Math.atan2(tp[o+3],tp[o+2]); if(Math.random()<dt*7){ tmpV.set(x,waveY(x,z,simT)+.25,z); fx('foam',tmpV,null,.55); } } });
