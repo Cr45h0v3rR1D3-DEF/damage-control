@@ -88,6 +88,17 @@ body.piloting #hint{display:none} @media (hover:hover) and (pointer:fine){#pad{d
 .coach-target{outline:3px solid var(--brass)!important;outline-offset:2px;animation:coachPulse 1.4s ease-in-out infinite} @keyframes coachPulse{50%{outline-offset:6px}} @media (prefers-reduced-motion:reduce){.coach-target{animation:none}} @media (max-width:860px){#coach{left:6px;right:6px;top:84px}}
 #hint span{display:inline-block;padding:4px 10px;background:var(--panel);border:1px solid var(--line);border-radius:2px;font-size:14px;max-width:100%}
 
+/* multiplayer */
+#gunHud:not([hidden])~#hint,#aaHud:not([hidden])~#hint,#pilotHud:not([hidden])~#hint{display:none}
+#mpBox{margin:0 0 8px;padding:6px 8px;border:1px solid var(--line);border-radius:2px;background:var(--well)}
+#mpBox .btn{background:var(--panel-solid)} #mpBox .btn[aria-pressed="true"]{background:var(--on)}
+.mpIn{font:inherit;padding:4px;border:1px solid var(--line);border-radius:2px;background:var(--panel-solid);color:var(--ink);-webkit-user-select:text;user-select:text}
+#mpBanner{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;pointer-events:none;padding:12px 22px;background:var(--panel);border:1px solid var(--line);border-radius:3px;font:700 34px/1.1 "Big Shoulders Stencil Display",Impact,sans-serif;text-align:center;max-width:calc(100% - 24px)}
+body.pvp #shipRow,body.pvp #fleetAddRow,body.pvp #fleetOpts,body.pvp #scnRow,body.pvp #hRescue,body.pvp #rRescue,body.pvp #hCat,body.pvp #rCat,
+body.pvp #bAir,body.pvp #bSurf,body.pvp #bSubm,body.pvp #bCross,body.pvp #bKam,body.pvp #bCease,body.pvp #bManAA,body.pvp #bDC,
+body.pvp #hSaves,body.pvp #saveRow,body.pvp #saveList,body.pvp #galleryBox,body.pvp #bReset,body.pvp #bTut,body.pvp #bReplay,body.pvp #hClock,body.pvp #timeRow,body.pvp #seaDepth,
+body.pvp [data-tool="torpedo"],body.pvp [data-tool="bomb"],body.pvp [data-tool="breach"],body.pvp [data-tool="fire"],body.pvp #breachRow,
+body.pvp #rail hr:first-of-type,body.pvpc #hSea,body.pvpc #seaH,body.pvpc #seaD,body.pvpc #bInside,body.pvpc #bSub{display:none!important}
 /* replay */
 #replayBar{position:absolute;left:156px;right:284px;bottom:8px;padding:8px 10px;display:none;gap:8px;align-items:center}
 #replayBar input{flex:1}
@@ -120,6 +131,7 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
   <div id="aaSight" hidden></div><div id="aaLead" hidden></div>
   <div id="pad" hidden><button data-k="w">▲</button><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button><button data-k="r">Up</button><button data-k="f">Down</button></div>
   <div id="coach" class="panel" hidden><p id="coachText"></p><div class="row"><span id="coachN"></span><span><button class="btn" id="coachSkip">Skip tutorial</button> <button class="btn" id="coachNext">Next</button></span></div></div>
+  <div id="mpBanner" hidden></div>
   <div id="hint"><span id="hintText">Pick a tool, then click the ship. Drag to look around.</span></div>
 
   <nav id="rail" class="panel" aria-label="Tools"></nav>
@@ -132,16 +144,35 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
   <aside id="side" class="panel">
     <h1 id="shipTitle">USS IOWA BB-61</h1>
     <div id="sub">Damage control simulator, 1944 fit</div>
-    <div class="row" style="margin-bottom:6px">
+    <div class="row" id="shipRow" style="margin-bottom:6px">
       <select id="shipSel" aria-label="Ship" style="flex:1;min-width:0"><option value="iowa">USS Iowa, battleship</option><option value="yamato">Yamato, battleship</option><option value="fletcher">USS Fletcher, destroyer</option><option value="liner">RMS Titanic, ocean liner</option><option value="bismarck">Bismarck, battleship</option><option value="hood">HMS Hood, battlecruiser</option><option value="essex">USS Essex, aircraft carrier</option></select>
     </div>
     <div id="fleetBox" style="margin:0 0 8px"><div id="fleetList"></div>
-      <div class="row" style="margin-top:3px"><select id="fleetAdd" aria-label="Ship to add to the fleet" style="flex:1;min-width:0"><option value="iowa">USS Iowa, battleship</option><option value="yamato">Yamato, battleship</option><option value="fletcher">USS Fletcher, destroyer</option><option value="liner">RMS Titanic, ocean liner</option><option value="bismarck">Bismarck, battleship</option><option value="hood">HMS Hood, battlecruiser</option><option value="essex">USS Essex, aircraft carrier</option></select><button class="btn" id="bFleetAdd" title="Add a second or third ship, fully simulated, in formation with the flagship">Add to fleet</button></div>
+      <div class="row" id="fleetAddRow" style="margin-top:3px"><select id="fleetAdd" aria-label="Ship to add to the fleet" style="flex:1;min-width:0"><option value="iowa">USS Iowa, battleship</option><option value="yamato">Yamato, battleship</option><option value="fletcher">USS Fletcher, destroyer</option><option value="liner">RMS Titanic, ocean liner</option><option value="bismarck">Bismarck, battleship</option><option value="hood">HMS Hood, battlecruiser</option><option value="essex">USS Essex, aircraft carrier</option></select><button class="btn" id="bFleetAdd" title="Add a second or third ship, fully simulated, in formation with the flagship">Add to fleet</button></div>
       <div class="row" id="fleetOpts" style="margin-top:3px" hidden><select id="fleetForm" aria-label="Formation"><option value="screen">Escort screen</option><option value="column">Column</option><option value="abreast">Line abreast</option></select><select id="fleetSpace" aria-label="Spacing"><option value="400">Close</option><option value="650" selected>Normal</option><option value="1100">Wide</option></select><button class="btn" id="bFleetHold" aria-pressed="true" title="Escorts steer and set their own speed to hold station on the flagship">Keep station</button></div></div>
-    <div class="row" style="margin-bottom:8px">
+    <div class="row" id="scnRow" style="margin-bottom:8px">
       <select id="scnSel" aria-label="Scenario" style="flex:1;min-width:0"><option value="">Sandbox</option><option value="pearl">Harbour raid, 7 December 1941</option><option value="tengo">Yamato’s last sortie, 7 April 1945</option><option value="iceberg">Iceberg, 14 April 1912</option><option value="strait">Denmark Strait, 24 May 1941</option><option value="rhine">Bismarck’s last battle, 27 May 1941</option><option value="okinawa">Kamikazes off Okinawa, 11 May 1945</option></select>
       <button class="btn" id="bScn">Start</button>
       <button class="btn" id="bTut">Tutorial</button>
+    </div>
+    <div id="mpBox">
+      <div style="font-weight:600;margin-bottom:4px">Multiplayer</div>
+      <div id="mpIdle">
+        <div class="row"><input id="mpName" class="mpIn" maxlength="20" placeholder="Your name" aria-label="Your name" style="flex:1;min-width:0"><button class="btn" id="bMpHost" title="Open a room and get a code to send to up to three friends">Host PvP battle</button></div>
+        <div class="row" style="margin-top:4px"><input id="mpCodeIn" class="mpIn" maxlength="5" placeholder="Room code" aria-label="Room code" autocomplete="off" style="flex:1;min-width:0;text-transform:uppercase;letter-spacing:.1em"><button class="btn" id="bMpJoin">Join</button></div>
+      </div>
+      <div id="mpRoom" hidden>
+        <div id="mpCodeLine" class="row"></div>
+        <div id="mpPlayers" style="margin:4px 0 6px"></div>
+        <div id="mpMine">
+          <div class="row">Your side <button class="btn" id="mpSideA" aria-pressed="true">Blue</button><button class="btn" id="mpSideB" aria-pressed="false">Red</button></div>
+          <div class="row" style="margin-top:4px"><select id="mpShipSel" aria-label="Ship to add" style="flex:1;min-width:0"></select><button class="btn" id="bMpAddShip">Add ship</button></div>
+          <div class="row" id="mpShips" style="margin-top:4px"></div>
+          <div id="mpCapNote" style="font-size:12.5px;color:var(--ink-soft);margin-top:2px"></div>
+        </div>
+        <div class="row" style="margin-top:6px"><button class="btn" id="bMpStart" title="Both sides need at least one player">Start battle</button><button class="btn" id="bMpBack" hidden>Back to lobby</button><button class="btn danger" id="bMpLeave">Leave room</button></div>
+      </div>
+      <div id="mpStatus" aria-live="polite" style="font-size:13px;color:var(--ink-soft);margin-top:4px"></div>
     </div>
     <div id="brief" style="font-size:13.5px;color:var(--ink-soft);margin:-2px 0 8px" hidden></div>
     <div id="status">Afloat and watertight</div>
@@ -187,7 +218,7 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
       <button class="btn danger" id="bAbandon" aria-pressed="false" title="Send the crew to the rails and release the rafts">Abandon ship</button>
       <button class="btn" id="bHold" aria-pressed="false" title="The captain never gives the order. The crew stays at their stations and keeps working whatever the list, until you order abandon ship yourself.">Hold fast</button>
     </div>
-    <h2>Sandbox rescue</h2>
+    <h2 id="hRescue">Sandbox rescue</h2>
     <div class="row" id="rRescue">
       <button class="btn" id="bSeal" title="Every breach, torn bulkhead and sprung deck is made tight again">Seal breaches</button>
       <button class="btn" id="bDry" title="All flood water gone, sea valves shut">Pump dry</button>
@@ -217,7 +248,7 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
       <button class="btn" id="bCease">Cease</button>
     </div>
 
-    <h2>Clock</h2>
+    <h2 id="hClock">Clock</h2>
     <div class="row" id="timeRow">
       <button class="btn" data-ts="0" aria-pressed="false">Pause</button>
       <button class="btn" data-ts="0.15" aria-pressed="false">Slow-mo</button>
@@ -226,10 +257,10 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
       <button class="btn" data-ts="60" aria-pressed="false">60×</button>
     </div>
 
-    <h2>Sea</h2>
-    <label class="sl"><span>Wave height</span><input id="sH" type="range" min="0" max="9" step="0.5" value="1"><output id="oH">1 m</output></label>
-    <label class="sl"><span>Waves from</span><input id="sD" type="range" min="0" max="345" step="15" value="60"><output id="oD">060°</output></label>
-    <label class="sl" style="grid-template-columns:86px 1fr"><span>Depth</span><select id="depthSel"><option value="15">Harbour, 15 m</option><option value="180" selected>Coastal shelf, 180 m</option><option value="1000">Open ocean, 1,000 m</option><option value="3800">Abyssal plain, 3,800 m</option></select></label>
+    <h2 id="hSea">Sea</h2>
+    <label class="sl" id="seaH"><span>Wave height</span><input id="sH" type="range" min="0" max="9" step="0.5" value="1"><output id="oH">1 m</output></label>
+    <label class="sl" id="seaD"><span>Waves from</span><input id="sD" type="range" min="0" max="345" step="15" value="60"><output id="oD">060°</output></label>
+    <label class="sl" id="seaDepth" style="grid-template-columns:86px 1fr"><span>Depth</span><select id="depthSel"><option value="15">Harbour, 15 m</option><option value="180" selected>Coastal shelf, 180 m</option><option value="1000">Open ocean, 1,000 m</option><option value="3800">Abyssal plain, 3,800 m</option></select></label>
 
     <h2>View</h2>
     <div class="row">
@@ -253,8 +284,8 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
       <button class="btn danger" id="bReset">Repair ship</button>
     </div>
 
-    <h2>Saved games</h2>
-    <div class="row"><button class="btn" id="bSave">Save game</button><button class="btn" id="bSaveFile" title="Writes a file with this game and a replay of how it got here">Save to file</button><button class="btn" id="bLoadFile">Load file</button><input id="fileIn" type="file" accept=".json,application/json" hidden></div>
+    <h2 id="hSaves">Saved games</h2>
+    <div class="row" id="saveRow"><button class="btn" id="bSave">Save game</button><button class="btn" id="bSaveFile" title="Writes a file with this game and a replay of how it got here">Save to file</button><button class="btn" id="bLoadFile">Load file</button><input id="fileIn" type="file" accept=".json,application/json" hidden></div>
     <div id="saveList" style="font-size:13.5px;margin-top:4px"></div>
     <div id="galleryBox" hidden><h2>Shared by others</h2><div class="row"><input id="shareTitle" maxlength="60" placeholder="Name this sinking" style="flex:1;min-width:0;font:inherit;padding:4px;border:1px solid var(--line);border-radius:2px;background:var(--well);color:var(--ink)" aria-label="Title for the shared game"><button class="btn" id="bShare">Share</button></div><div id="gallery" style="font-size:13.5px;margin-top:4px"></div></div>
 
@@ -302,6 +333,237 @@ function halfB(x,y){
   let f=1; if(s>0.35)f*=1-p.flare*((s-0.35)/0.65)*Math.pow(1-rel,1.2); if(s<-0.75)f*=1-0.5*((-s-0.75)/0.25)*(1-rel);
   return HB*planF(s)*b*f;
 }
+
+/* ---------- multiplayer: PvP fleet battles over peer-to-peer room codes ----------
+   One browser (the host) runs the real simulation. The others send their orders to it and draw what it sends back. */
+const MP={role:null,code:'',net:null,me:null,players:[],started:false,over:null,ev:[],snapT:0,snapN:0,recvAt:0,tHost:0,tPrev:0,rPrev:0,rate:1,shots:null,torps:null,charges:null,planes:null,kin:null,chkT:0,inSplit:false,rec:false};
+const MPV=1, MP_MAXP=4, MP_TOTAL=8, SIDES={A:{name:'Blue',col:0x3f86e0,css:'#3f86e0'},B:{name:'Red',col:0xd8452f,css:'#d8452f'}};
+const LOCALNET=/[?&]net=local/.test(location.search);
+const isClient=()=>MP.started&&MP.role==='client';
+function mpCap(n){ return Math.min(3,Math.floor(MP_TOTAL/Math.max(1,n||MP.players.length))); }
+function mpCodeGen(){ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<5;i++)s+=A[Math.floor(Math.random()*A.length)]; return s; }
+function mulberry(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function mpStatus(t){ const el=$('mpStatus'); if(el)el.textContent=t||''; }
+/* the connection: PeerJS through its free public broker, or a same-browser channel for testing (?net=local) */
+function loadPeerJS(){ return new Promise((res,rej)=>{ if(window.Peer)return res(); const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js'; s.onload=()=>res(); s.onerror=()=>rej(new Error('Could not load the connection library. Check your internet connection.')); document.head.appendChild(s); }); }
+async function netOpenHost(code,h){
+  if(LOCALNET){ const bc=new BroadcastChannel('dmgctl-'+code),conns=new Set(),T={id:'host',conns,send(to,m){bc.postMessage({to,from:'host',m});},bcast(m){for(const c of conns)T.send(c,m);},close(){T.bcast({t:'close'}); bc.close();}};
+    bc.onmessage=e=>{ const d=e.data; if(d.to!=='host')return; if(d.m.t==='hi'){ if(!conns.has(d.from)){conns.add(d.from); h.join(d.from);} return; } if(d.m.t==='bye'){ if(conns.delete(d.from))h.leave(d.from); return; } h.msg(d.from,d.m); }; setTimeout(()=>h.ready(),0); return T; }
+  await loadPeerJS(); const P=new Peer('dmgctl-'+code),conns=new Map();
+  const T={id:'host',conns,send(to,m){ const c=conns.get(to); if(c&&c.open)try{c.send(m);}catch(e){} },bcast(m){ for(const c of conns.values())if(c.open)try{c.send(m);}catch(e){} },close(){ T.bcast({t:'close'}); setTimeout(()=>{try{P.destroy();}catch(e){}},300); }};
+  P.on('open',()=>h.ready()); P.on('error',e=>h.err(e)); P.on('disconnected',()=>{ try{P.reconnect();}catch(e){} });
+  P.on('connection',c=>{ c.on('open',()=>{ conns.set(c.peer,c); h.join(c.peer); }); c.on('data',m=>h.msg(c.peer,m)); c.on('close',()=>{ if(conns.delete(c.peer))h.leave(c.peer); }); c.on('error',()=>{}); });
+  return T; }
+async function netOpenClient(code,h){
+  if(LOCALNET){ const bc=new BroadcastChannel('dmgctl-'+code),id='c'+Math.random().toString(36).slice(2,8),T={id,send(m){bc.postMessage({to:'host',from:id,m});},close(){T.send({t:'bye'}); bc.close();}};
+    bc.onmessage=e=>{ const d=e.data; if(d.to===id)h.msg(d.m); }; setTimeout(()=>{ T.send({t:'hi'}); h.open(); },60); return T; }
+  await loadPeerJS(); const P=new Peer(); let c=null; const T={id:null,send(m){ if(c&&c.open)try{c.send(m);}catch(e){} },close(){ try{P.destroy();}catch(e){} }};
+  P.on('open',id=>{ T.id=id; c=P.connect('dmgctl-'+code,{reliable:true,serialization:'json'}); c.on('open',()=>h.open()); c.on('data',m=>h.msg(m)); c.on('close',()=>h.lost()); c.on('error',()=>{}); });
+  P.on('error',e=>h.err(e)); return T; }
+const IN_CLAUDE=/claude/i.test(location.hostname);
+function netErrText(e){ const t=e&&e.type; return (IN_CLAUDE&&(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed')?'Multiplayer cannot connect from inside the Claude preview. Open the game’s own website to play with friends. ':'')+(t==='peer-unavailable'?'No battle with that code. Check the code and that the host is still waiting.':t==='unavailable-id'?'That room code is taken. Try hosting again.':t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'?'Could not reach the matchmaking server. Your network may be blocking it.':t==='browser-incompatible'?'This browser cannot make peer-to-peer connections.':(e&&e.message)||'Connection failed.'); }
+/* ---------- the lobby ---------- */
+function mpName(){ const v=($('mpName').value||'').trim().slice(0,20); return v||'Captain'; }
+function mpMe(){ return MP.players.find(p=>p.id===MP.me); }
+function mpSideCount(sd){ return MP.players.filter(p=>p.side===sd).length; }
+async function mpHost(){ if(MP.role)return; try{localStorage.setItem('dc-name',mpName());}catch(e){} MP.code=mpCodeGen(); MP.role='host'; MP.me='host'; MP.players=[{id:'host',name:mpName(),side:'A',ships:[FLEET.ships[0]?FLEET.ships[0].cls:'iowa'],host:true}]; mpStatus('Opening the room…'); drawMP();
+  MP.ready=false; try{ MP.net=await netOpenHost(MP.code,{ready:()=>{ MP.ready=true; mpStatus('Waiting for players. Share the code or the link.'); drawMP(); },err:e=>{ const t=netErrText(e); if(!MP.ready||(e&&e.type==='unavailable-id')){ mpLeave(true); } mpStatus(t); },
+      join:id=>{},leave:id=>mpPlayerLeft(id),msg:(id,m)=>mpHostMsg(id,m)}); }
+  catch(e){ mpStatus(e.message); MP.role=null; drawMP(); } }
+async function mpJoin(){ if(MP.role)return; const code=($('mpCodeIn').value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,''); if(code.length!==5){ mpStatus('Room codes are 5 letters and numbers.'); return; } try{localStorage.setItem('dc-name',mpName());}catch(e){}
+  MP.code=code; MP.role='client'; MP.joined=false; mpStatus('Connecting to '+code+'…'); drawMP(); clearTimeout(MP.joinT); MP.joinT=setTimeout(()=>{ if(MP.role==='client'&&!MP.joined&&MP.code===code){ mpLeave(true); mpStatus('Could not connect to the host. One of your networks may be blocking direct connections. Try another network, or let the other player host.'); } },20000);
+  try{ MP.net=await netOpenClient(code,{open:()=>{ MP.me=MP.net.id; MP.net.send({t:'join',name:mpName(),v:MPV}); mpStatus('Connected. Waiting for the host.'); },err:e=>{ mpStatus(netErrText(e)); mpLeave(true); },lost:()=>mpHostLost(),msg:m=>mpClientMsg(m)}); }
+  catch(e){ mpStatus(e.message); MP.role=null; drawMP(); } }
+function mpLeave(quiet){ const was=MP.started; try{ if(MP.net){ if(MP.role==='client')MP.net.send({t:'bye'}); MP.net.close(); } }catch(e){} MP.net=null; MP.role=null; MP.players=[]; MP.me=null; mpEndBattleLocal(was); if(!quiet)mpStatus('You left the room.'); drawMP(); }
+function mpBroadcastLobby(){ if(MP.role!=='host')return; const m={t:'lobby',code:MP.code,players:MP.players,cap:mpCap()}; MP.net.bcast(m); drawMP(); }
+function mpFixCaps(){ const cap=mpCap(); for(const p of MP.players)if(p.ships.length>cap)p.ships.length=cap; }
+function mpHostMsg(id,m){
+  if(m.t==='join'){ if(m.v!==MPV){ MP.net.send(id,{t:'deny',why:'Your page is a different version. Reload it and try again.'}); return; } if(MP.started){ MP.net.send(id,{t:'deny',why:'A battle is already under way in that room.'}); return; } if(MP.players.length>=MP_MAXP){ MP.net.send(id,{t:'deny',why:'That room is full.'}); return; }
+    const side=mpSideCount('A')<=mpSideCount('B')?'A':'B'; MP.players.push({id,name:String(m.name||'Captain').slice(0,20),side,ships:['fletcher']}); mpFixCaps(); log(String(m.name||'A captain').slice(0,20)+' joined the room.',true); mpBroadcastLobby(); return; }
+  if(m.t==='pick'){ const p=MP.players.find(p=>p.id===id); if(!p||MP.started)return; if(m.side==='A'||m.side==='B')p.side=m.side; if(Array.isArray(m.ships))p.ships=m.ships.filter(c=>CLASSES[c]).slice(0,mpCap()); mpBroadcastLobby(); return; }
+  if(m.t==='c'){ if(MP.started)mpHostCmd(id,m); return; }
+  if(m.t==='bye'){ mpPlayerLeft(id); return; } }
+function mpPlayerLeft(id){ const i=MP.players.findIndex(p=>p.id===id); if(i<0)return; const p=MP.players[i]; MP.players.splice(i,1); if(MP.started){ for(const S of FLEET.ships)if(S.owner===id){S.owner=null;} log(p.name+' left the battle. Their ships steam on without a captain.',true); } else { mpFixCaps(); log(p.name+' left the room.',true); } mpBroadcastLobby(); }
+function mpClientMsg(m){
+  if(m.t==='deny'){ mpStatus(m.why); mpLeave(true); return; }
+  if(m.t==='lobby'){ MP.joined=true; MP.players=m.players; MP.code=m.code; if(MP.started&&!MP.over)return; drawMP(); return; }
+  if(m.t==='start'){ mpBuild(m.roster,m.seed,m.players); return; }
+  if(m.t==='s'){ if(MP.started)mpApply(m); return; }
+  if(m.t==='end'){ mpShowEnd(m.w); return; }
+  if(m.t==='back'){ mpEndBattleLocal(true); MP.players=m.players||MP.players; mpStatus('Back in the lobby. The host can start a rematch.'); drawMP(); return; }
+  if(m.t==='close'){ mpHostLost(); return; } }
+function mpHostLost(){ if(!MP.role)return; const was=MP.started; MP.net=null; MP.role=null; MP.players=[]; mpEndBattleLocal(was); mpStatus('The host closed the room.'); log('The host closed the room.',true); drawMP(); }
+function mpPick(side,ships){ const me=mpMe(); if(!me||MP.started)return; if(side)me.side=side; if(ships)me.ships=ships.slice(0,mpCap()); if(MP.role==='host')mpBroadcastLobby(); else { MP.net.send({t:'pick',side:me.side,ships:me.ships}); drawMP(); } }
+function mpCanStart(){ return MP.role==='host'&&MP.players.length>=2&&mpSideCount('A')>0&&mpSideCount('B')>0&&MP.players.every(p=>p.ships.length>0); }
+function mpStart(){ if(!mpCanStart())return; const roster=[]; for(const p of MP.players)for(const c of p.ships)roster.push({cls:c,owner:p.id,side:p.side}); const seed=(Math.random()*2**31)|0; MP.net.bcast({t:'start',roster,seed,players:MP.players}); mpBuild(roster,seed,MP.players); }
+/* both sides build identical ships in the same order from the same random seed, so compartment and part numbers match */
+function mpBuild(R,seed,players){ exitPilot(); exitAA(); if(gun.cam)setGunCam(false); if(replay.on)exitReplay(); endScenario(true); ceaseBattle(true); MP.players=players; MP.over=null; MP.ev=[]; MP.snapN=0; MP.shots=MP.torps=MP.charges=MP.planes=null; MP.rate=1; MP.tHost=0; MP.recvAt=0; MP.dx=null; MP.chkT=1; MP.snapT=0; hideBanner(); if(coach.i>=0){ coach.i=coach.steps.length; coachShow(); } for(const s of gun.live)scene.remove(s.mesh); gun.live.length=0; timeScale=1; $('timeRow').querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',o.dataset.ts==='1'));
+  const r0=Math.random; Math.random=mulberry(seed);
+  try{ for(const S of FLEET.ships){ disposeShip(S); if(S.sideRing)scene.remove(S.sideRing); } FLEET.ships=[]; zebra=false; selected=null; hoverC=null; simT=0; driftX=driftZ=0; frameVX=frameVZ=0; logEl.innerHTML=''; setDepth(1000,true); sea.targetH=sea.H=1.5; buildWaves();
+    selectClass(R[0].cls); buildShip(); fleetInit(); for(let i=1;i<R.length;i++)addFleetShip(R[i].cls,{load:true,quiet:true,mp:true});
+    const perSide={A:[],B:[]}; FLEET.ships.forEach((S,i)=>{ S.idx=i; S.owner=R[i].owner; S.side=R[i].side; S.tgt=makeTgt(S); S.lock=null; S.manualT=-1e9; perSide[S.side].push(S); });
+    for(const sd of ['A','B']){ const hx=sd==='A'?1:-1,z0=sd==='A'?-2500:2500,x0=sd==='A'?-3000:3000; let lane=0,prevOwner=null,k=0;
+      for(const S of perSide[sd]){ if(S.owner!==prevOwner){ if(prevOwner!==null)lane++; prevOwner=S.owner; k=0; } else k++;
+        const b=S.bodies[0]; b.p.x=x0-hx*k*480; b.p.z=z0+(sd==='A'?-1:1)*lane*900; b.q.setFromAxisAngle(new V3(0,1,0),-Math.atan2(0,hx)); b.cache(); b.sync(); const vm=CLASSES[S.cls].plant.vmax; S.telegraph=.66; S.speed=vm*.6; S.vx=S.speed*hx; S.vz=0;
+        const ring=new THREE.Mesh(new THREE.RingGeometry(.93,1,64),new THREE.MeshBasicMaterial({color:SIDES[sd].col,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false})); ring.rotation.x=-Math.PI/2; ring.renderOrder=3; ring.scale.setScalar(CLASSES[S.cls].LH*1.25); scene.add(ring); S.sideRing=ring; } } }
+  finally{ Math.random=r0; }
+  for(const p of MP.players)p.active=FLEET.ships.findIndex(S=>S.owner===p.id);
+  MP.started=true; MP.rec=MP.role==='host'; document.body.classList.add('pvp'); document.body.classList.toggle('pvpc',MP.role==='client'); if(MP.role==='client'){ timeScale=1; }
+  const mine=FLEET.ships.find(S=>S.owner===MP.me)||FLEET.ships[0]; useShip(mine); FLEET.active=mine; follow=mainBody()||liveBodies()[0]; applyClassUI(); planLvl=1; drawTabs(); setTool('look'); if(xray)setXray(true);
+  const me=mpMe(),foes=MP.players.filter(p=>me&&p.side!==me.side).map(p=>p.name).join(' and ');
+  logLocal('Battle stations. '+(me?SIDES[me.side].name:'')+' fleet against '+(foes||'the enemy')+'. Enemy ships are ringed in '+(me&&me.side==='A'?'red':'blue')+'; click one to target it.',true); snd.alarm(); mpStatus(''); drawMP(); drawFleet(); }
+function mpEndBattleLocal(rebuild){ const was=MP.started; MP.started=false; MP.rec=false; MP.over=null; MP.ev=[]; MP.shots=MP.torps=MP.planes=null; gsGeo.setDrawRange(0,0); for(const m of ghostTorps)m.visible=false; for(const g of ghostPlanes)g.visible=false; document.body.classList.remove('pvp','pvpc'); hideBanner(); for(const S of FLEET.ships)if(S.sideRing){scene.remove(S.sideRing);S.sideRing=null;} if(was&&rebuild){ const cls=(FLEET.active&&FLEET.active.cls)||'iowa'; if(ghostGroup)ghostGroup.visible=false; setShip(cls); } }
+function mpBackToLobby(){ if(MP.role!=='host')return; MP.net.bcast({t:'back',players:MP.players}); mpEndBattleLocal(true); mpStatus('Back in the lobby. Change ships if you like, then start again.'); drawMP(); }
+/* ---------- targets: enemy ships look like the other targets the gunnery code already knows about ---------- */
+function makeTgt(S){ return {isShip:true,S,name:S.name,get L(){return CLASSES[S.cls].LH*2;},get W(){return CLASSES[S.cls].HB*2;},get p(){ const b=mbOf(S)||S.bodies.find(x=>x.deadT===Infinity); if(b)this._p=b.p.clone(); return this._p?this._p.clone():new V3(); },get yaw(){ const b=mbOf(S); if(!b)return 0; const e=b.e,l=Math.hypot(e[0],e[2])||1; return Math.atan2(e[2]/l,e[0]/l); },get spd(){ return S.speed; },get sunk(){ return !mbOf(S); },get hp(){ let w=0; for(const c of S.comps)w+=c.water; const res=(S.totalVol*RHO-S.mass0)/1000; return Math.max(0,100*(1-w*1.025/res)); }}; }
+function tgtValid(K){ if(!K)return false; if(K.isShip)return FLEET.ships.includes(K.S)&&!K.sunk; return ship.battle.kin.includes(K)&&!K.sunk&&K.hp>0; }
+function isFoe(S){ return MP.started&&S&&FLEET.active&&S.side!==FLEET.active.side; }
+function foeShips(){ return MP.started?FLEET.ships.filter(S=>S.side!==ship.side&&shipAlive(S)):[]; }
+function targetsList(){ return ship.battle.kin.filter(k=>!k.sunk&&k.hp>0).concat(foeShips().map(S=>S.tgt)); }
+function tgtRef(K){ return !K?null:K.isShip?{s:K.S.idx}:{k:ship.battle.kin.indexOf(K)}; }
+function tgtFrom(r){ if(!r)return null; if(r.s!=null){ const S=FLEET.ships[r.s]; return S&&S.tgt; } return ship.battle.kin[r.k]||null; }
+/* ---------- the host: events, snapshots, orders from the other players ---------- */
+function mpEv(e){ if(MP.rec)MP.ev.push(e); }
+const f32b=a=>b64(new Uint8Array(new Float32Array(a).buffer)), i16b=a=>b64(new Uint8Array(a.buffer)), unF32=s=>new Float32Array(unb64(s).buffer), unI16=s=>new Int16Array(unb64(s).buffer);
+function mpSnap(){ const A=ship,sh=[],q=v=>Math.max(-32767,Math.min(32767,Math.round(v*8))); MP.snapN++; const full=MP.snapN%2===1,crewT=MP.snapN%3===1;
+  for(const S of FLEET.ships){ useShip(S); const o={},L=S.bodies.filter(b=>b.deadT===Infinity),base=(mbOf(S)||L[0]||S.bodies[0]).p;
+    o.b=L.map(b=>[b.id,r2(b.p.x),r2(b.p.y),r2(b.p.z),r3(b.q.x),r3(b.q.y),r3(b.q.z),r3(b.q.w),r3(b.sub),b.resting?1:0,r2(b.v.y)]); o.o=[r2(base.x),r2(base.y),r2(base.z)];
+    const ct=crewTotals(),gm=gunsManned(); o.u=[r2(S.speed),S.telegraph,r2(S.rudder),S.rudderOrd,r2(S.power),S.steerOK?1:0,S.running||0,S.crew.abandon?1:0,zebra?1:0,S.dc.auto?1:0,S.holdFast?1:0,Math.round(ct.aboard),Math.round(ct.water),Math.round(ct.safe),Math.round(ct.dead),ct.teams,gm.mb,gm.aa,r2(S.vx),r2(S.vz)];
+    o.t=S.turrets.map(t=>[r3(t.g.rotation.y),turretManned(t)?1:0,(t.reload||0)<=0?1:0]);
+    if(full){ const n=S.comps.length,fl=new Uint8Array(n*4); for(const c of S.comps){ const i=c.id*4; fl[i]=Math.round(clamp(c.water/c.vol,0,1)*255); fl[i+1]=Math.round(c.fire*255); fl[i+2]=Math.round(c.smoke*255); fl[i+3]=(c.pump?1:0)|(c.valve?2:0)|(c.fighting?4:0); } o.c=b64(fl); }
+    const D=S.debris; if(D.length){ const dp=new Int16Array(D.length*3),dq=new Int8Array(D.length*4); D.forEach((d,i)=>{ const p=d.g.position,g=d.g.quaternion; dp[i*3]=q(p.x-base.x);dp[i*3+1]=q(p.y-base.y);dp[i*3+2]=q(p.z-base.z); dq[i*4]=g.x*127;dq[i*4+1]=g.y*127;dq[i*4+2]=g.z*127;dq[i*4+3]=g.w*127; }); o.dp=i16b(dp); o.dq=b64(new Uint8Array(dq.buffer)); }
+    if(crewT){ const C=S.crew,live=C.figs.filter(f=>f.state!=='gone'),fp=new Int16Array(live.length*3),fs=new Uint8Array(live.length); live.forEach((f,i)=>{ if(f.state==='deck'&&f.body.deadT===Infinity)f.body.world(f.lx,deckY(f.lx/LH),f.lz,f.wp); fp[i*3]=q(f.wp.x-base.x);fp[i*3+1]=q(f.wp.y-base.y);fp[i*3+2]=q(f.wp.z-base.z); fs[i]=f.state==='deck'?0:1; }); o.f=i16b(fp); o.fs=b64(fs);
+      const rp=new Int16Array(C.rafts.length*3); C.rafts.forEach((r,i)=>{rp[i*3]=q(r.p.x-base.x);rp[i*3+1]=q(r.p.y-base.y);rp[i*3+2]=q(r.p.z-base.z);}); o.r=i16b(rp); }
+    sh.push(o); }
+  useShip(A); const B=ship.battle,shots=[]; for(const s of gun.live)shots.push(s.p.x,s.p.y,s.p.z,s.v.x,s.v.y,s.v.z); for(const T of B.tracers)shots.push(T.p.x,T.p.y,T.p.z,T.v.x,T.v.y,T.v.z);
+  const tp=[]; for(const t of B.torps)tp.push(t.p.x,t.p.z,t.h.x,t.h.z,t.spd); const pl=[]; for(const P of B.planes)pl.push(P.p.x,P.p.y,P.p.z,P.v.x,P.v.y,P.v.z);
+  return {t:'s',T:r2(simT),dx:r2(driftX),dz:r2(driftZ),fv:[r2(frameVX),r2(frameVZ)],H:sea.targetH,dir:sea.dir,ts:timeScale,sh,st:shots.length?f32b(shots):'',tp:tp.length?f32b(tp):'',pl:pl.length?f32b(pl):'',ev:MP.ev.splice(0)}; }
+function mpHostTick(dtReal){ MP.bgT=performance.now(); MP.snapT-=dtReal; if(MP.snapT<=0){ MP.snapT=1/6; MP.net.bcast(mpSnap()); }
+  MP.chkT-=dtReal; if(MP.chkT<=0){ MP.chkT=1; mpCheck(); } }
+/* a player whose ship is gone takes over their next ship; the battle ends when one side has nothing left afloat */
+function mpCheck(){ for(const p of MP.players){ const S=FLEET.ships[p.active]; if(!S||!shipAlive(S)||S.crew.abandon){ const n=FLEET.ships.find(x=>x.owner===p.id&&shipAlive(x)&&!x.crew.abandon); if(n&&n!==S){ p.active=n.idx; if(p.id===MP.me)commandShip(n,true); else mpEv({e:'cmd',s:n.idx}); } } }
+  if(MP.over)return; const up=sd=>FLEET.ships.some(S=>S.side===sd&&shipAlive(S)&&!S.crew.abandon),a=up('A'),b=up('B'); if(a&&b)return; const w=a?'A':b?'B':'';
+  MP.net.bcast({t:'end',w}); mpShowEnd(w); }
+function mpShowEnd(w){ MP.over=w||'draw'; const me=mpMe(),won=me&&w===me.side; const txt=!w?'Both fleets are out of the fight. A draw.':SIDES[w].name+' fleet wins.'+(me?(won?' Victory!':' Your fleet is beaten.'):''); showBanner(txt); logLocal(txt); setBrief('<b>'+txt+'</b> '+(MP.role==='host'?'Press <i>Back to lobby</i> in the Multiplayer panel for a rematch.':'Waiting for the host to start a rematch.')); drawMP(); }
+function mpHostCmd(pid,m){ const S=FLEET.ships[m.s],P=MP.players.find(p=>p.id===pid); if(!S||!P||S.owner!==pid)return; const A=ship; useShip(S);
+  try{ switch(m.c){
+    case 'cmd': P.active=S.idx; break;
+    case 'tel': if(S.crew.abandon){ log('No one is left at the throttles.'); break; } S.telegraph=clamp(+m.v||0,0,1); break;
+    case 'rud': S.rudderOrd=clamp(Math.round(+m.v||0),-35,35); break;
+    case 'zebra': zebra=!!m.v; log(zebra?'Condition Zebra set. Watertight doors and hatches closed.':'Watertight doors opened.'); break;
+    case 'auto': S.dc.auto=!!m.v; log(S.dc.auto?'Repair parties acting on their own initiative.':'Repair parties standing by for your orders.'); break;
+    case 'hold': S.holdFast=!!m.v; log(S.holdFast?'Hold fast. The crew will not leave their stations unless you order it.':'The captain may order abandon ship again when she is lost.'); break;
+    case 'abandon': orderAbandon(false); break;
+    case 'cflood': counterFlood(false); break;
+    case 'comp': { const c=S.comps[m.id]; if(c&&['flood','pump','hose'].includes(m.tool))compTool(c,m.tool); break; }
+    case 'patch': { const h=S.holes.find(h=>h.c.id===m.cid&&!h.hidden&&!h.patched&&h.pos.distanceTo(tmpV.set(m.p[0],m.p[1],m.p[2]))<.6); if(h){ patchHole(h); log('Breach at '+h.c.name+' shored up'+(h.area0>10?'. It still leaks badly.':'.')); } break; }
+    case 'salvo': fireSalvo(new V3(+m.a[0],0,+m.a[1]),false,tgtFrom(m.k)); break;
+    case 'lock': { const K=tgtFrom(m.k); S.lock=K&&tgtValid(K)?K:null; S.fireT=0; break; }
+    case 'torp': torpedoAttack(); break;
+    case 'dc': depthCharges(); break; } }
+  finally{ useShip(A); } }
+/* ---------- the other players: orders out, snapshots in ---------- */
+function mpCmd(c,x){ if(!MP.net||!FLEET.active)return; MP.net.send(Object.assign({t:'c',c,s:FLEET.active.idx},x||{})); }
+function mpApplyEv(e){ const S=e.s>=0?FLEET.ships[e.s]:null; if(S)useShip(S);
+  switch(e.e){
+    case 'h': { const c=ship.comps[e.c]; if(c)addHole(c,new V3(e.p[0],e.p[1],e.p[2]),e.a,e.n?new V3(e.n[0],e.n[1],e.n[2]):null,!!e.hd,!!e.sc); break; }
+    case 'ph': { const h=ship.holes.find(h=>h.c.id===e.c&&!h.patched&&h.pos.distanceTo(tmpV.set(e.p[0],e.p[1],e.p[2]))<.6); if(h){ h.patched=true; if(h.ring)h.ring.material=ringPatched; } break; }
+    case 'd': { const b=ship.bodies.find(b=>b.id===e.b); if(b)addDent(b,new V3(e.p[0],e.p[1],e.p[2]),e.R,e.dp); break; }
+    case 'sp': { const b=ship.bodies.find(b=>b.id===e.b); if(b&&b.deadT===Infinity){ b.cache(); splitBody(b,e.x,true); } break; }
+    case 'bo': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ quietLog=true; try{ blowOff(p,b,new V3(),new V3(),true); } finally{ quietLog=false; } const d=ship.debris[ship.debris.length-1]; if(d){ d.rest=true; d.v.set(0,0,0); } break; } } break; }
+    case 'ch': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ p.userData.charred=true; p.material=M.char; break; } } break; }
+    case 'x': explode(new V3(e.p[0],e.p[1],e.p[2]),e.z,false); break;
+    case 'fk': flakFx(new V3(e.p[0],e.p[1],e.p[2]),false); break;
+    case 'm': { const tr=ship.turrets[e.ti]; if(tr&&tr.alive&&tr.g.parent&&tr.g.parent.userData.body)muzzle(tr,tr.g.parent.userData.body,new V3(e.d[0],e.d[1],e.d[2]),e.l); break; }
+    case 'l': { const me=mpMe(); if(e.s===-1||(me&&e.sd===me.side)){ let msg=e.m; const T=FLEET.ships[e.s]; if(T&&T!==FLEET.active&&!e.np)msg=T.name+': '+msg; useShip(FLEET.active); log(msg,true); } break; }
+    case 'cmd': { const T=FLEET.ships[e.s]; if(T&&T.owner===MP.me){ useShip(FLEET.active); commandShip(T,true); log('Your ship is out of the fight. You take command of '+T.name+'.',true); } break; } }
+  useShip(FLEET.active); }
+function mpApply(m){ const now=performance.now(); if(m.T>MP.tHost&&MP.recvAt){ const r=(m.T-MP.tHost)/Math.max(.05,(now-MP.recvAt)/1000); MP.rate=clamp(MP.rate*.7+r*.3,0,80); } else if(m.T===MP.tHost)MP.rate*=.5; MP.tHost=m.T; MP.recvAt=now;
+  if(m.ev)for(const e of m.ev)mpApplyEv(e); if(!m.sh||!m.sh.length)return;
+  if(m.H!=null){ sea.targetH=m.H; if(sea.dir!==m.dir){ sea.dir=m.dir; buildWaves(); } } if(m.dx!=null){ MP.dx=m.dx; MP.dz=m.dz; frameVX=m.fv[0]; frameVZ=m.fv[1]; }
+  m.sh.forEach((o,i)=>{ const S=FLEET.ships[i]; if(!S)return; useShip(S);
+    for(const a of o.b){ const b=S.bodies.find(b=>b.id===a[0]); if(!b)continue; if(!b._tp){ b._tp=new V3(); b._tq=new THREE.Quaternion(); b.p.set(a[1],a[2],a[3]); b.q.set(a[4],a[5],a[6],a[7]).normalize(); } b._tp.set(a[1],a[2],a[3]); b._tq.set(a[4],a[5],a[6],a[7]).normalize(); b.sub=a[8]; b.resting=!!a[9]; b.v.y=a[10]; }
+    const u=o.u; S.speed=u[0]; S.telegraph=u[1]; S.rudder=u[2]; S.rudderOrd=u[3]; S.power=u[4]; S.steerOK=!!u[5]; S.running=u[6]; S.crew.abandon=!!u[7]; S.zebra=!!u[8]; if(S===ship)zebra=S.zebra; S.dc.auto=!!u[9]; S.holdFast=!!u[10]; S._ct={aboard:u[11],water:u[12],safe:u[13],dead:u[14],teams:u[15],inside:0}; S._gm={mb:u[16],aa:u[17],heavy:0,light:0}; S.vx=u[18]; S.vz=u[19];
+    o.t.forEach((a,j)=>{ const t=S.turrets[j]; if(!t)return; t.g.rotation.y=a[0]; t._man=!!a[1]; t.reload=a[2]?0:1; });
+    if(o.c){ const fl=unb64(o.c); for(const c of S.comps){ const k=c.id*4; c.water=fl[k]/255*c.vol; c.fire=fl[k+1]/255; c.smoke=fl[k+2]/255; c.pump=!!(fl[k+3]&1); c.valve=fl[k+3]&2?(c.valve||{net:1}):null; c.fighting=!!(fl[k+3]&4); } }
+    const bx=o.o[0],by=o.o[1],bz=o.o[2];
+    if(o.dp){ const dp=unI16(o.dp),dq=new Int8Array(unb64(o.dq).buffer); S.debris.forEach((d,j)=>{ if(j*3>=dp.length)return; d.g.visible=true; d.g.position.set(bx+dp[j*3]/8,by+dp[j*3+1]/8,bz+dp[j*3+2]/8); d.g.quaternion.set(dq[j*4]/127,dq[j*4+1]/127,dq[j*4+2]/127,dq[j*4+3]/127).normalize(); }); }
+    if(o.f){ S._figs=unI16(o.f); S._fst=unb64(o.fs); S._rafts=unI16(o.r); S._fo=[bx,by,bz]; } });
+  useShip(FLEET.active); if(FLEET.active)zebra=!!FLEET.active.zebra;
+  MP.shots=m.st?unF32(m.st):null; MP.torps=m.tp?unF32(m.tp):null; MP.planes=m.pl?unF32(m.pl):null; MP.fv=m.fv||[0,0]; MP.ts=m.ts; }
+/* between snapshots the other players' screens glide the ships toward where the host last put them, and fly shells along their arcs */
+function mpClientTick(dt){ const k=1-Math.exp(-dt*8),age=Math.min(.5,(performance.now()-MP.recvAt)/1000);
+  simT=MP.tHost+age*(MP.rate||0); for(const S of FLEET.ships)for(const b of S.bodies){ if(b.deadT!==Infinity||!b._tp)continue; if(b.p.distanceToSquared(b._tp)>400*400){ b.p.copy(b._tp); b.q.copy(b._tq); } else { b.p.lerp(b._tp,k); b.q.slerp(b._tq,k); } b.cache(); }
+  ghostGroup.visible=true; const fv=MP.fv||[0,0],a=age*(MP.rate||0); if(MP.dx!=null){ driftX=MP.dx+fv[0]*a; driftZ=MP.dz+fv[1]*a; }
+  const sh=MP.shots,ns=sh?Math.min(GSN,sh.length/6):0; for(let i=0;i<ns;i++){ const o=i*6; gsPos[i*3]=sh[o]+(sh[o+3]-fv[0])*a; gsPos[i*3+1]=sh[o+1]+sh[o+4]*a-4.9*a*a; gsPos[i*3+2]=sh[o+2]+(sh[o+5]-fv[1])*a; } gsGeo.setDrawRange(0,ns); gsGeo.attributes.position.needsUpdate=true; ghostShots.material.size=5;
+  const tp=MP.torps,nt=tp?tp.length/5:0; while(ghostTorps.length<nt){ const m=new THREE.Mesh(torpGeo,torpMat); ghostGroup.add(m); ghostTorps.push(m); } ghostTorps.forEach((m,i)=>{ m.visible=i<nt; if(i<nt){ const o=i*5,x=tp[o]+(tp[o+2]*tp[o+4]-fv[0])*a,z=tp[o+1]+(tp[o+3]*tp[o+4]-fv[1])*a; m.position.set(x,-2.6,z); m.rotation.y=-Math.atan2(tp[o+3],tp[o+2]); if(Math.random()<dt*7){ tmpV.set(x,waveY(x,z,simT)+.25,z); fx('foam',tmpV,null,.55); } } });
+  const pl=MP.planes,np=pl?pl.length/6:0; while(ghostPlanes.length<np){ const g=makePlane(); battleGroup.remove(g); ghostGroup.add(g); ghostPlanes.push(g); } ghostPlanes.forEach((g,i)=>{ g.visible=i<np; if(i<np){ const o=i*6; g.position.set(pl[o]+pl[o+3]*a,pl[o+1]+pl[o+4]*a,pl[o+2]+pl[o+5]*a); g.rotation.set(0,Math.atan2(-pl[o+5],pl[o+3]),Math.asin(clamp(pl[o+4]/(Math.hypot(pl[o+3],pl[o+4],pl[o+5])||1),-1,1))); } });
+  for(const k2 in ghostKin)ghostKin[k2].forEach(g=>g.visible=false); }
+function mpDrawCrew(){ let k=0,r=0; const q=[];
+  for(const S of FLEET.ships){ const F=S._figs,st=S._fst,o=S._fo; if(!F||!o)continue; for(let i=0;i<st.length&&k<FIGN;i++,k++){ const sw=st[i]===1; figM.makeScale(1,sw?.75:1,1); figM.setPosition(o[0]+F[i*3]/8,o[1]+F[i*3+1]/8,o[2]+F[i*3+2]/8); figMesh.setMatrixAt(k,figM); figMesh.setColorAt(k,sw?colSwim:colDeck); }
+    const R=S._rafts; for(let i=0;R&&i<R.length/3&&r<RAFTN;i++){ figM.makeTranslation(o[0]+R[i*3]/8,o[1]+R[i*3+1]/8,o[2]+R[i*3+2]/8); raftMesh.setMatrixAt(r++,figM); } }
+  figMesh.count=k; figMesh.instanceMatrix.needsUpdate=true; if(figMesh.instanceColor)figMesh.instanceColor.needsUpdate=true; raftMesh.count=r; raftMesh.instanceMatrix.needsUpdate=true; inMesh.count=0; inMesh.visible=false; battleGroup.visible=false; }
+function mpSideRings(){ for(const S of FLEET.ships){ if(!S.sideRing)continue; const b=mbOf(S); S.sideRing.visible=!!b; if(b){ S.sideRing.position.set(b.p.x,.35,b.p.z); } } }
+/* ---------- the enemy fleet as a gunnery target: shells land where they land ---------- */
+const shProbe=new V3();
+function shellSweep(Sh,ox,oy,oz){ const p=Sh.p,d=Math.hypot(p.x-ox,p.y-oy,p.z-oz),n=Math.max(1,Math.ceil(d/6)); for(let k=1;k<=n;k++){ const f=k/n; shProbe.set(ox+(p.x-ox)*f,oy+(p.y-oy)*f,oz+(p.z-oz)*f); if(shProbe.y<70&&shellVsShips(Sh,shProbe))return true; } return false; }
+function shellVsShips(Sh,P){ const A=ship; for(const T of FLEET.ships){ if(T===Sh.src)continue; for(const b of T.bodies){ if(b.deadT!==Infinity||b.resting)continue; const R=(b.xb-b.xa)/2+40; if(Math.abs(P.x-b.p.x)>R||Math.abs(P.z-b.p.z)>R)continue;
+      useShip(T); b.cache(); const e=b.e,wx=P.x-b.bx,wy=P.y-b.by,wz=P.z-b.bz,lx=e[0]*wx+e[1]*wy+e[2]*wz,ly=e[4]*wx+e[5]*wy+e[6]*wz,lz=e[8]*wx+e[9]*wy+e[10]*wz;
+      if(lx>b.xa&&lx<b.xb&&ly<supTop(lx)+3&&ly>keelY(lx/LH)-1){ const dk=deckY(lx/LH),hb=halfB(lx,clamp(ly,keelY(lx/LH),dk)); if(Math.abs(lz)<(ly>dk?Math.max(hb,SUP[0]?SUP[0].hw:hb):hb)+1){ shipShellHit(b,new V3(lx,ly,lz),Sh); if(Sh.src&&Math.random()<(Sh.big?.7:.25)){ const tn=T.name; useShip(Sh.src); log('Hit on '+tn+'!'); } useShip(A); return true; } } } }
+  useShip(A); return false; }
+function shipShellHit(b,lp,Sh){ const big=Sh.big,x=clamp(lp.x,b.xa+4,b.xb-4),side=lp.z>=0?1:-1,dk=deckY(x/LH),top=lp.y>dk-1.5; ship.stats.shell=(ship.stats.shell||0)+1; b.resting=false;
+  const arm=big?(CLS.armor||0)*.8:Math.min(.92,(CLS.armor||0)*2.1); b.world(x,Math.min(lp.y,supTop(x)),lp.z,tmpV);
+  if(!top&&Math.random()<arm){ explode(tmpV.clone(),big?.8:.4); if(Math.random()<.35)log(big?'A heavy shell breaks up on the armour belt.':'Splinters rattle off the armour belt.'); return; }
+  if(!big){ const c=top?compAt(b,x,dk-1,clamp(lp.z,-HB*.8,HB*.8)):compAt(b,x,clamp(lp.y,WL-1,dk-1),side*(halfB(x,clamp(lp.y,WL-1,dk-1))-1)); if(!c)return;
+    const hp=top?new V3(x,c.y1,clamp(lp.z,c.z0,c.z1)):new V3(x,clamp(lp.y,WL-.6,dk-.5),side*halfB(x,clamp(lp.y,WL-.6,dk-.5))); addHole(c,hp,.5,top?new V3(0,1,0):new V3(0,0,side),false,true); const lost=killIn(c,.1); if(Math.random()<.3)ignite(c,.35,true); blast(b,hp,4,.35); ship.secDamage[c.sec]+=.015;
+    explode(tmpV.clone(),.55); if(Math.random()<.5)log('Shell hit at '+c.name+'.'+lostMsg(lost)); return; }
+  if(top){ const L0=log; log=(msg,np)=>L0(msg.replace(/^Bomb /,'Shell '),np); try{ bombHit(b,new V3(x,Math.max(lp.y,dk),clamp(lp.z,-HB*.9,HB*.9)),Math.random()<.35); } finally{ log=L0; } return; }
+  const y=clamp(lp.y,WL-2.5,dk-.5),hb=halfB(x,y),hp=new V3(x,y,side*hb),c=compAt(b,x,y,side*(hb-1.2)); addHole(c,hp,1.1,new V3(0,0,side),false,true); addDent(b,hp,4,.7); const lost=killIn(c,.25);
+  if(CLS.thinDeck&&Math.random()<.08){ let mi=-1,bd=1e9; CLS.mags.forEach((m,i)=>{ const S2=SECS.find(S2=>S2[0]===m); if(S2){ const d=Math.abs((S2[1]+S2[2])/2-x); if(d<bd&&ship.comps.some(cc=>cc.mag===i)){bd=d;mi=i;} } }); if(mi>=0&&bd<40){ if(Math.random()<.4){ log('A plunging shell goes through the thin deck armour into the '+CLS.mags[mi].toLowerCase()+'.'); detonate(mi); return; } magFire(mi); } }
+  if(Math.random()<.4)ignite(c,.45,true); blast(b,hp,6,.5); ship.secDamage[c.sec]+=.08; explode(tmpV.clone(),1); log('Shell hits the '+(side>0?'starboard':'port')+' side at '+c.name+'.'+lostMsg(lost)); }
+/* crews fight back on their own: every manned gun picks the locked target, or the nearest enemy in range */
+function pvpCrewFire(dt,b){ const man=manualOn(); let K=ship.lock&&tgtValid(ship.lock)&&ship.lock.isShip&&ship.lock.S.side!==ship.side?ship.lock:null;
+  if(!K){ let bd=1e12; for(const T of FLEET.ships){ if(T.side===ship.side||!shipAlive(T))continue; const tb=mbOf(T),d=(tb.p.x-b.p.x)**2+(tb.p.z-b.p.z)**2; if(d<bd){bd=d;K=T.tgt;} } }
+  if(!K)return; const tp=K.p,R=Math.hypot(tp.x-b.p.x,tp.z-b.p.z);
+  for(const tr of ship.turrets){ const main=isMain(tr); if(!main&&tr.reload>0)tr.reload-=dt; if(!turretManned(tr)||tr.order||(main&&man))continue; if(R>(tr.big?11500:7500))continue; const tb=tr.g.parent.userData.body,w=turretWant(tr,tb,tp); if(!w.bears)continue;
+    const want=clamp(w.want,-2.55,2.55),df=want-tr.g.rotation.y; tr.g.rotation.y+=clamp(df,-.07*dt,.07*dt); if(Math.abs(df)<.05&&(tr.reload||0)<=0){ tr.reload=tr.reloadT*rnd(1,1.3); const aim=tp.clone().setY(0).add(new V3(rnd(-1,1)*R*.015,0,rnd(-1,1)*R*.015)); fireLive(tr,tb,aim,w.lp.z,K); } }
+  if(CLS.id==='fletcher'&&!MP.players.some(p=>FLEET.ships[p.active]===ship)&&R<4000&&Math.random()<dt*.02&&torpMounts().some(([p])=>!p.userData.fired))torpedoAttack(); }
+/* escorts follow their owner's ship in column; ships without a captain hold their course */
+function stepFleetPvP(dt){ const Fs=FLEET.ships,cmd=new Set(MP.players.map(p=>Fs[p.active]).filter(Boolean));
+  for(const S of Fs){ if(cmd.has(S)||S.crew.abandon)continue; const b=mbOf(S); if(!b)continue; const P=MP.players.find(p=>p.id===S.owner),G=P&&Fs[P.active],gb=G&&G!==S&&!G.crew.abandon?mbOf(G):null,vmax=CLASSES[S.cls].plant.vmax; if(!gb){ S.rudderOrd=0; continue; }
+    const own=Fs.filter(x=>x.owner===S.owner&&x!==G),k=own.indexOf(S)+1; b.cache(); gb.cache(); const [hx,hz]=headingOf(gb),sx=gb.p.x-hx*k*480,sz=gb.p.z-hz*k*480,along=(sx-b.p.x)*hx+(sz-b.p.z)*hz,tx=sx+hx*450,tz=sz+hz*450; let want=clamp(G.speed+clamp(along*.012,-4,6),0,vmax);
+    const [bx,bz]=headingOf(b),dx=tx-b.p.x,dz=tz-b.p.z,err=Math.atan2(bx*dz-bz*dx,bx*dx+bz*dz); S.rudderOrd=clamp(Math.round(err*180/Math.PI*1.3),-35,35);
+    for(const O of Fs){ if(O===S)continue; const ob=mbOf(O); if(!ob)continue; const rx=ob.p.x-b.p.x,rz=ob.p.z-b.p.z,rr=Math.hypot(rx,rz)||1,cl=((S.vx-O.vx)*rx+(S.vz-O.vz)*rz)/rr; if(cl<=.5)continue; const look=120+cl*30,al=rx*bx+rz*bz,cr=bx*rz-bz*rx,clear=CLASSES[O.cls].LH+CLASSES[S.cls].LH*.5+60; if(al>-CLASSES[S.cls].LH&&al<look+clear&&Math.abs(cr)<clear){ S.rudderOrd=cr>0?-35:35; want=Math.min(want,vmax*.35); break; } }
+    S.telegraph=clamp(want/vmax,0,1); } }
+/* ---------- the Multiplayer panel ---------- */
+function drawMP(){ const box=$('mpBox'); if(!box)return; const inRoom=!!MP.role,me=mpMe(); $('mpIdle').hidden=inRoom; $('mpRoom').hidden=!inRoom;
+  if(!inRoom)return; const link=location.origin+location.pathname+'?room='+MP.code; $('mpCodeLine').innerHTML=''; const cl=$('mpCodeLine'),b=document.createElement('b'); b.textContent=MP.code||'…'; b.style.cssText='font-size:22px;letter-spacing:.12em'; cl.append('Room code ',b,' '); if(MP.code&&/^https?:/.test(location.protocol)&&!IN_CLAUDE){ const cp=document.createElement('button'); cp.className='btn'; cp.textContent='Copy invite link'; cp.onclick=()=>{ try{ navigator.clipboard.writeText(link); mpStatus('Invite link copied.'); }catch(e){ mpStatus(link); } }; cl.append(cp); }
+  const L=$('mpPlayers'); L.innerHTML=''; const cap=mpCap();
+  for(const sd of ['A','B']){ const hd=document.createElement('div'); hd.style.cssText='font-weight:600;margin-top:4px;color:'+SIDES[sd].css; hd.textContent=SIDES[sd].name+' fleet'; L.appendChild(hd);
+    const ps=MP.players.filter(p=>p.side===sd); if(!ps.length){ const e=document.createElement('div'); e.style.color='var(--ink-soft)'; e.textContent='No one yet'; L.appendChild(e); }
+    for(const p of ps){ const r=document.createElement('div'); r.style.cssText='font-size:13.5px;line-height:1.3'; r.textContent=p.name+(p.id===MP.me?' (you)':'')+(p.host?' · host':'')+': '+(p.ships.length?p.ships.map(c=>(SIST[c]||[c])[0].replace(/^(USS|HMS|RMS) /,'')).join(', '):'no ships yet'); L.appendChild(r); } }
+  const mine=$('mpMine'); mine.hidden=MP.started||!me; if(me&&!MP.started){ $('mpSideA').setAttribute('aria-pressed',me.side==='A'); $('mpSideB').setAttribute('aria-pressed',me.side==='B'); const cs=$('mpShips'); cs.innerHTML=''; me.ships.forEach((c,i)=>{ const x=document.createElement('button'); x.className='btn'; x.textContent=(SIST[c]||[c])[0].replace(/^(USS|HMS|RMS) /,'')+' ×'; x.title='Remove'; x.onclick=()=>{ const s=me.ships.slice(); s.splice(i,1); mpPick(null,s); }; cs.appendChild(x); }); $('bMpAddShip').disabled=me.ships.length>=cap; $('mpCapNote').textContent='Up to '+cap+' ship'+(cap>1?'s':'')+' each with '+MP.players.length+' player'+(MP.players.length>1?'s':'')+'.'; }
+  $('bMpStart').hidden=MP.role!=='host'||MP.started; $('bMpStart').disabled=!mpCanStart(); $('bMpBack').hidden=MP.role!=='host'||!MP.started; $('bMpLeave').textContent=MP.started?'Leave battle':'Leave room'; }
+function showBanner(t){ const el=$('mpBanner'); el.textContent=t; el.hidden=false; } function hideBanner(){ const el=$('mpBanner'); if(el)el.hidden=true; }
+function drawFleetMP(){ const el=$('fleetList'); el.innerHTML=''; FLEET.rows=[]; $('fleetOpts').hidden=true;
+  for(const sd of ['A','B']){ const hd=document.createElement('div'); hd.style.cssText='font-weight:600;color:'+SIDES[sd].css; hd.textContent=SIDES[sd].name; el.appendChild(hd);
+    for(const S of FLEET.ships.filter(S=>S.side===sd)){ const P=MP.players.find(p=>p.id===S.owner),row=document.createElement('div'); row.className='row'; row.style.cssText='margin:2px 0;flex-wrap:nowrap'; const t=document.createElement('span'); t.style.cssText='flex:1;min-width:0;line-height:1.2'; const nm=document.createElement('b'); nm.textContent=S.name; nm.style.fontWeight=S===FLEET.active?'700':'500'; const st=document.createElement('span'); st.style.cssText='display:block;color:var(--ink-soft);font-size:12.5px'; t.append(nm,' ',document.createTextNode(P?'· '+P.name:'· no captain'),st); row.append(t);
+      if(S.owner===MP.me){ const cb=document.createElement('button'); cb.className='btn'; cb.textContent=S===FLEET.active?'In command':'Command'; cb.disabled=S===FLEET.active; cb.onclick=()=>commandShip(S); row.append(cb); } else if(S.side!==(FLEET.active&&FLEET.active.side)){ const tb=document.createElement('button'); tb.className='btn'; tb.textContent='Target'; tb.onclick=()=>setLock(S.tgt); row.append(tb); }
+      el.appendChild(row); FLEET.rows.push([S,st]); } } updateFleetRows(); }
+/* ---------- small helpers the rest of the page calls ---------- */
+function logLocal(m){ const r=MP.rec; MP.rec=false; try{ log(m,true); } finally{ MP.rec=r; } }
+function nearestFoeTgt(){ const mb=mainBody(); if(!mb)return null; let K=null,bd=1e15; for(const T of foeShips()){ const tb=mbOf(T),d=(tb.p.x-mb.p.x)**2+(tb.p.z-mb.p.z)**2; if(d<bd){bd=d;K=T.tgt;} } return K; }
+function foePickables(){ return [].concat(...foeShips().map(S=>S.pickables)); }
+function updateLockRing(){ const K=gun.lock; if(K&&!tgtValid(K)){ gun.lock=null; if(isClient())log('Target lost.'); } const L=gun.lock; lockRing.visible=!!L&&!replay.on; if(L){ const p=L.p; lockRing.position.set(p.x,.6,p.z); lockRing.scale.setScalar(L.L*.62); } }
+function mpBattleInfo(){ const n=foeShips().length,nt=isClient()?(MP.torps?MP.torps.length/5:0):ship.battle.torps.length; return n+' enemy ship'+(n===1?'':'s')+' afloat'+(nt?', '+nt+' torpedo'+(nt===1?'':'es')+' running.':'.'); }
+function mpInitUI(room){ $('mpShipSel').innerHTML=$('shipSel').innerHTML; $('mpShipSel').value='iowa'; try{ $('mpName').value=localStorage.getItem('dc-name')||''; }catch(e){}
+  $('bMpHost').onclick=mpHost; $('bMpJoin').onclick=mpJoin; $('mpCodeIn').onkeydown=e=>{ if(e.key==='Enter')mpJoin(); }; $('bMpLeave').onclick=()=>mpLeave(false); $('bMpStart').onclick=mpStart; $('bMpBack').onclick=mpBackToLobby;
+  $('mpSideA').onclick=()=>mpPick('A'); $('mpSideB').onclick=()=>mpPick('B'); $('bMpAddShip').onclick=()=>{ const me=mpMe(); if(me&&me.ships.length<mpCap())mpPick(null,me.ships.concat([$('mpShipSel').value])); };
+  window.addEventListener('beforeunload',()=>{ if(MP.net)try{ if(MP.role==='client')MP.net.send({t:'bye'}); MP.net.close(); }catch(e){} });
+  if(room){ $('mpCodeIn').value=room.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,5); mpStatus('You have been invited to room '+$('mpCodeIn').value+'. Type your name and press Join.'); if(window.innerWidth<=860){ $('side').classList.add('open'); $('mobSide').setAttribute('aria-pressed',true); } setTimeout(()=>{ try{$('mpBox').scrollIntoView({block:'nearest'});}catch(e){} },300); }
+  drawMP(); }
+/* a hidden browser tab stops drawing frames; the host keeps the battle going once a second so nobody else freezes */
+setInterval(()=>{ if(!(document.hidden&&MP.started&&MP.role==='host'&&MP.net))return; const now=performance.now(),dt=Math.min(2,Math.max(0,(now-(MP.bgT||now))/1000)); if(dt<=.05)return; try{ simulate(dt*timeScale); MP.snapT=0; mpHostTick(dt); }catch(e){ MP.bgT=now; } },1000);
 
 /* ---------- ship classes ---------- */
 const BB_SECS=[
@@ -516,6 +778,7 @@ const camLight=new THREE.PointLight(0xcfe6ff,0,1100,1.2); scene.add(camLight);
 const boomLight=new THREE.PointLight(0xffb060,0,900,2); scene.add(boomLight);
 let shake=0;
 function explode(pos,size,rec){
+  if(MP.rec)mpEv({e:'x',p:[r2(pos.x),r2(pos.y),r2(pos.z)],z:r2(size)});
   if(rec!==false)ship.events.push({t:simT,pos:pos.clone(),size});
   snd.boom(size,camera.position.distanceTo(pos)); fx('flash',pos,null,size); boomLight.position.copy(pos); boomLight.intensity=Math.max(boomLight.intensity,4*size); shake=Math.max(shake,2.5*size);
   const n=Math.round(14*size);
@@ -571,7 +834,7 @@ function dentHull(body,d){ const m=body.hull[0]; if(!m)return; const P=m.geometr
   for(let i=0;i<P.count;i++){ const x=P.getX(i),y=P.getY(i),z=P.getZ(i),dd=Math.hypot(x-d.x,y-d.y,z-d.z); if(dd>d.R)continue; any=true; const k=Math.pow(1-dd/d.R,1.6),dep=d.depth*k*(.6+.8*hash(x+i,y)); const nx=N.getX(i),ny=N.getY(i),nz=N.getZ(i),sgn=(nz*z+ny*.2)>=0?1:-1; P.setXYZ(i,x-nx*dep*sgn,y-ny*dep*sgn*.4,z-nz*dep*sgn);
     const s=Math.min(1,k*1.5); Cc.setXYZ(i,lerp(Cc.getX(i),.07,s),lerp(Cc.getY(i),.06,s),lerp(Cc.getZ(i),.05,s)); }
   if(any){ P.needsUpdate=true; Cc.needsUpdate=true; m.geometry.computeVertexNormals(); } }
-function addDent(body,pos,R,depth){ const d={x:pos.x,y:pos.y,z:pos.z,R,depth}; ship.dents.push(d); dentHull(body,d); }
+function addDent(body,pos,R,depth){ if(MP.rec)mpEv({e:'d',s:body.S.idx,b:body.id,p:[r3(pos.x),r3(pos.y),r3(pos.z)],R:r3(R),dp:r3(depth)}); const d={x:pos.x,y:pos.y,z:pos.z,R,depth}; ship.dents.push(d); dentHull(body,d); }
 const ringPatched=new THREE.MeshBasicMaterial({color:0x9aa4aa,polygonOffset:true,polygonOffsetFactor:-5,side:THREE.DoubleSide});
 
 function hullMeshes(xa,xb,jagA,jagB){
@@ -855,15 +1118,15 @@ function stepCrew(dt,t){
 function drawCrew(show){ const A=ship,seeIn=xray||(pilot.on&&pilot.mode==='in'); let k=0,j=0,r=0;
   if(show)for(const S of FLEET.ships){ useShip(S); const C=S.crew;
     for(const f of C.figs){ if(f.state==='gone'||k>=FIGN)continue; const sw=f.state==='swim'; if(f.state==='deck'){ if(f.body.deadT!==Infinity)continue; tmpV.set(f.lx,deckY(f.lx/LH),f.lz); f.body.group.localToWorld(tmpV); } else tmpV.copy(f.wp); figM.makeScale(1,sw?.75:1,1); figM.setPosition(tmpV.x,tmpV.y,tmpV.z); figMesh.setMatrixAt(k,figM); figMesh.setColorAt(k,f.state==='deck'?colDeck:colSwim); k++; }
-    if(seeIn&&(xray||S===A))for(const f of C.inFigs){ if(j>=IFN||f.c.body.deadT!==Infinity)continue; tmpV.copy(f.p); f.c.body.group.localToWorld(tmpV); {const sc=xray?(f.team?1.5:1.15):1; figM.makeScale(sc,sc,sc);} figM.setPosition(tmpV.x,tmpV.y,tmpV.z); inMesh.setMatrixAt(j,figM); inMesh.setColorAt(j,f.team?colTeam:colIn); j++; }
+    if(seeIn&&(xray||S===A)&&!isFoe(S))for(const f of C.inFigs){ if(j>=IFN||f.c.body.deadT!==Infinity)continue; tmpV.copy(f.p); f.c.body.group.localToWorld(tmpV); {const sc=xray?(f.team?1.5:1.15):1; figM.makeScale(sc,sc,sc);} figM.setPosition(tmpV.x,tmpV.y,tmpV.z); inMesh.setMatrixAt(j,figM); inMesh.setColorAt(j,f.team?colTeam:colIn); j++; }
     for(const R of C.rafts){ if(r>=RAFTN)break; figM.makeScale(CLS.rafts.scale[0],CLS.rafts.scale[1],CLS.rafts.scale[2]); figM.setPosition(R.p.x,R.p.y,R.p.z); raftMesh.setMatrixAt(r++,figM); } }
   useShip(A); figMesh.count=k; figMesh.instanceMatrix.needsUpdate=true; if(figMesh.instanceColor)figMesh.instanceColor.needsUpdate=true; inMesh.count=j; inMesh.visible=show&&seeIn; inMesh.instanceMatrix.needsUpdate=true; if(inMesh.instanceColor)inMesh.instanceColor.needsUpdate=true; raftMesh.count=r; raftMesh.instanceMatrix.needsUpdate=true; drawTracers(); battleGroup.visible=show; }
-function crewTotals(){ const C=ship.crew; let inside=0,top=C.pending; for(const c of ship.comps)inside+=c.crew; for(const f of C.figs)if(f.state==='deck'||f.state==='fall')top+=f.n; const tm=ship.dc.teams.filter(t=>t.alive).length; inside+=tm*8; return {teams:tm,aboard:inside+top,inside,water:C.inWater,safe:C.safe,dead:C.dead}; }
+function crewTotals(){ if(isClient()&&ship._ct)return ship._ct; const C=ship.crew; let inside=0,top=C.pending; for(const c of ship.comps)inside+=c.crew; for(const f of C.figs)if(f.state==='deck'||f.state==='fall')top+=f.n; const tm=ship.dc.teams.filter(t=>t.alive).length; inside+=tm*8; return {teams:tm,aboard:inside+top,inside,water:C.inWater,safe:C.safe,dead:C.dead}; }
 
 
 /* ---------- debris: anything bolted on can be blown off ---------- */
 function openRooms(body,bx){ for(const c of body.comps)if(c.sup&&!c.opened&&c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ c.opened=true; addHole(c,new V3(c.xc,c.y1,c.zc),20,null,true); killIn(c,.8); if(c.water/c.vol<.5){c.fire=Math.max(c.fire,.5);c.fuel=300;} } }
-function blowOff(obj,body,vel,spin,quiet){ if(obj.userData.gone)return; obj.userData.gone=true; const home={body,pos:obj.position.clone(),quat:obj.quaternion.clone(),xrayOnly:ship.mach.includes(obj)}; obj.updateMatrixWorld(true); const wp=new V3(),wq=new THREE.Quaternion(); obj.getWorldPosition(wp); obj.getWorldQuaternion(wq);
+function blowOff(obj,body,vel,spin,quiet){ if(obj.userData.gone)return; obj.userData.gone=true; if(MP.rec)mpEv({e:'bo',s:body.S.idx,pid:obj.userData.pid}); const home={body,pos:obj.position.clone(),quat:obj.quaternion.clone(),xrayOnly:ship.mach.includes(obj)}; obj.updateMatrixWorld(true); const wp=new V3(),wq=new THREE.Quaternion(); obj.getWorldPosition(wp); obj.getWorldQuaternion(wq);
   body.group.remove(obj); let i=body.parts.indexOf(obj); if(i>=0)body.parts.splice(i,1); i=ship.pickables.indexOf(obj); if(i>=0)ship.pickables.splice(i,1);
   i=ship.mach.indexOf(obj); if(i>=0){ ship.mach.splice(i,1); obj.visible=true; obj.traverse(k=>{ k.renderOrder=0; if(k.material===MM.steel)k.material=M.gray; else if(k.material===MM.boiler)k.material=M.rust; else if(k.material===MM.shaft)k.material=M.bronze; }); }
   scene.add(obj); obj.position.copy(wp); obj.quaternion.copy(wq); ship.debris.push(makeDebris(obj,vel,spin||new V3(rnd(-1.6,1.6),rnd(-.6,.6),rnd(-1.6,1.6)),!obj.userData.topside)); ship.debris[ship.debris.length-1].home=home; ship.supportDirty=true;
@@ -895,7 +1158,7 @@ function formTeam(c){ const D=ship.dc,t={id:++D.seq,c,path:[],hopT:0,task:null,w
 function dropTask(t){ if(t.task&&t.task.type==='fire')t.task.c.fighting=false; t.task=null; t.work=0; t.path=[]; }
 function killTeam(t,where){ if(!t.alive)return; dropTask(t); t.alive=false; ship.crew.dead+=8; ship.crew.inFigs=ship.crew.inFigs.filter(f=>f.team!==t); log('Repair party '+t.id+' is lost in '+(where||t.c).name+'.'); }
 function workComp(c,pos){ if(c.kind!=='tank')return c; const b=c.body; let w=compAt(b,pos.x,LMID(2),pos.z*.8); if(w.kind==='tank')w=compAt(b,pos.x,LMID(3),pos.z*.6); return w.kind==='tank'?null:w; }
-function patchHole(h){ h.patched=true; h.area=h.area0*(h.area0>10?.25:.06); if(h.ring)h.ring.material=ringPatched; }
+function patchHole(h){ if(MP.rec&&h.marker)mpEv({e:'ph',s:h.c.body.S.idx,c:h.c.id,p:[r3(h.pos.x),r3(h.pos.y),r3(h.pos.z)]}); h.patched=true; h.area=h.area0*(h.area0>10?.25:.06); if(h.ring)h.ring.material=ringPatched; }
 function routes(from){ const dist=new Map([[from,0]]),prev=new Map(); let q=[from]; while(q.length){ const nq=[]; for(const c of q)for(const e of ship.adj.get(c)||[]){ if(!passable(e.cn)||dist.has(e.o))continue; dist.set(e.o,dist.get(c)+1); prev.set(e.o,c); if(e.o.kind!=='tank'&&e.o.water/e.o.vol<.7&&e.o.fire<.75&&e.o.smoke<.92)nq.push(e.o); } q=nq; } return {dist,prev}; }
 function planDC(){ const D=ship.dc, tasks=[], claimed=new Set(D.teams.filter(t=>t.alive&&t.task).map(t=>t.task.key)); let pumps=0; for(const c of ship.comps)if(c.pump)pumps++;
   for(const c of ship.comps){ if(c.body.resting||c.body.sub>.97)continue; if(c.fire>.05&&c.water/c.vol<.6)tasks.push({type:'fire',key:'f'+c.id,c,at:c,score:55+c.fire*25+(SECS[c.sec][3]==='mag'&&!c.sup?40:0)}); }
@@ -949,8 +1212,8 @@ function makeEnemyMesh(){ const g=new THREE.Group(),keep=CLS.id; selectClass('io
 function startSurface(opt){ opt=opt||{}; const B=ship.battle; if(B.mode&&!opt.scn){log('A battle is already under way.');return;} snd.alarm(); if(!opt.scn)B.mode='surface'; const sd=opt.side||(Math.random()<.5?1:-1),g=makeEnemyMesh(); if(opt.two){ const g2=makeEnemyMesh(); g2.position.set(420,0,-60); g.add(g2); }
   g.position.set(rnd(-300,300),-10.6,sd*3000); const K=enemyKin(g,sd); K.reload=14; K.range=0; if(opt.name)K.name=opt.name; if(opt.hp)K.hp=opt.hp; if(opt.two){K.two=true;K.L=520;} K.onGone=()=>{B.enemy=null; if(B.mode==='surface')B.mode=null;}; B.enemy=addKin(K); for(const t of ship.turrets)t.reload=rnd(6,14); log('General quarters. '+(opt.name||'Enemy battleship')+(opt.two?' and consort':'')+' bearing '+(sd>0?'090':'270')+', range 3,000 m. Main battery manned.'); }
 function ceaseBattle(quiet){ const B=ship.battle; if(typeof gun!=='undefined'&&gun.lock)setLock(null); for(const p of B.planes)battleGroup.remove(p.g); B.planes.length=0; for(const K of B.kin)battleGroup.remove(K.g); B.kin.length=0; B.enemy=null; B.sub=null; for(const tp of B.torps)scene.remove(tp.mesh); B.torps.length=0; for(const c of B.charges)scene.remove(c.mesh); B.charges.length=0; if(B.flak)B.flak.length=0; B.shells.length=0; B.tracers.length=0; if(B.mode&&!quiet)log('Action broken off.'); B.mode=null; }
-function gunsManned(){ let aa=0,mb=0,heavy=0,light=0; if(!ship.crew.abandon&&simT>=(ship.aaDelay||0)){ for(const m of ship.aa){ const b=m.alive&&m.obj.parent&&m.obj.parent.userData.body; if(b&&b.deadT===Infinity&&Math.abs(b.list)<30&&b.sub<.9&&(ship.power>=.1||!m.obj.isGroup)){ aa++; if(m.big&&m.obj.isGroup)heavy++; else light++; } } for(const t of ship.turrets)if(turretManned(t))mb++; } return {aa,mb,heavy,light}; }
-function turretManned(t){ if(!t.alive||ship.crew.abandon||ship.power<.2)return false; const b=t.g.parent&&t.g.parent.userData.body; if(!b||b.deadT!==Infinity||Math.abs(b.list)>15||b.sub>.85)return false; let n=0; for(const c of b.comps)if(c.sec===t.sec&&!c.sup&&(c.lvl===1||c.lvl===2))n+=c.crew; return n>3; }
+function gunsManned(){ if(isClient())return ship._gm||{aa:0,mb:0,heavy:0,light:0}; let aa=0,mb=0,heavy=0,light=0; if(!ship.crew.abandon&&simT>=(ship.aaDelay||0)){ for(const m of ship.aa){ const b=m.alive&&m.obj.parent&&m.obj.parent.userData.body; if(b&&b.deadT===Infinity&&Math.abs(b.list)<30&&b.sub<.9&&(ship.power>=.1||!m.obj.isGroup)){ aa++; if(m.big&&m.obj.isGroup)heavy++; else light++; } } for(const t of ship.turrets)if(turretManned(t))mb++; } return {aa,mb,heavy,light}; }
+function turretManned(t){ if(isClient())return !!t._man; if(!t.alive||ship.crew.abandon||ship.power<.2)return false; const b=t.g.parent&&t.g.parent.userData.body; if(!b||b.deadT!==Infinity||Math.abs(b.list)>15||b.sub>.85)return false; let n=0; for(const c of b.comps)if(c.sec===t.sec&&!c.sup&&(c.lvl===1||c.lvl===2))n+=c.crew; return n>3; }
 function kamCrash(body,tx){ const x=clamp(tx,body.xa+6,body.xb-6),lp=new V3(x,supTop(x),rnd(-.35,.35)*HB); ship.stats.bomb++; body.world(lp.x,lp.y,lp.z,tmpV); explode(tmpV.clone(),1.6);
   const c1=compAt(body,lp.x,lp.y-1,lp.z); if(c1){ addHole(c1,new V3(lp.x,c1.y1,lp.z),6,new V3(0,1,0),false,true); ignite(c1,.9,true); c1.fuel=Math.max(c1.fuel,900); for(const e of ship.adj.get(c1)||[])if(e.o.flammable&&e.o.water/e.o.vol<.4&&Math.random()<.6){ignite(e.o,.5,true);e.o.fuel=Math.max(e.o.fuel,700);} for(const h of ship.holes)if(h.c===c1&&h.weather)h.jam=true; for(const cn of ship.conns)if((cn.a===c1||cn.b===c1)&&cn.closable)cn.jam=true; }
   let lost=c1?killIn(c1,.6):0; for(const f of ship.crew.figs)if(f.state==='deck'&&f.body===body&&Math.hypot(f.lx-lp.x,f.lz-lp.z)<12){f.state='gone';ship.crew.dead+=f.n;lost+=f.n;} blast(body,lp,16,1); if(c1)ship.secDamage[c1.sec]+=.1;
@@ -965,7 +1228,7 @@ function planeName(P){ return P.kam?'kamikaze':P.tb?'torpedo plane':'dive bomber
 function downPlane(P,own){ if(P.state==='down')return; P.state='down'; const B=ship.battle; B.kills++; if(own){ AAG.kills++; log('Your gun shoots down a '+planeName(P)+'! ('+AAG.kills+' for you)',true); snd.boom(.5,P.p.distanceTo(camera.position)); } else log(planeName(P).replace(/^./,c=>c.toUpperCase())+' shot down.',true); }
 /* heavy anti-aircraft fire: time-fused and proximity-fused shells that burst in black puffs around the aircraft */
 function gauss(){ return (Math.random()+Math.random()+Math.random()-1.5)*1.41; }
-function flakFx(pos,rec){ for(let k=0;k<2;k++){ tmpV2.set(rnd(-2,2),rnd(-.5,1),rnd(-2,2)); fx('flak',pos,tmpV2,1); } fx('flash',pos,null,.2); if(rec)ship.events.push({t:simT,pos:pos.clone(),size:.4,flak:true}); }
+function flakFx(pos,rec){ if(MP.rec)mpEv({e:'fk',p:[r2(pos.x),r2(pos.y),r2(pos.z)]}); for(let k=0;k<2;k++){ tmpV2.set(rnd(-2,2),rnd(-.5,1),rnd(-2,2)); fx('flak',pos,tmpV2,1); } fx('flash',pos,null,.2); if(rec)ship.events.push({t:simT,pos:pos.clone(),size:.4,flak:true}); }
 function flakBurst(pos,own){ flakFx(pos,true); snd.boom(.16,camera.position.distanceTo(pos)); for(const P of ship.battle.planes){ if(P.state==='down')continue; const d=P.p.distanceTo(pos); if(d>24)continue; P.aaHp=(P.aaHp==null?4:P.aaHp)-(own?3.2:2.4)*(1-d/24)-.3; fx('smoke',P.p,null,.6); if(own){AAG.hits++;AAG.hitT=performance.now();} if(P.aaHp<=0)downPlane(P,own); } }
 function stepFlak(dt,t){ const B=ship.battle; if(!B.flak)B.flak=[]; const planes=B.planes.filter(P=>P.state!=='down');
   if(planes.length)for(const S of FLEET.ships){ const G=S._G,mb=S._mb; if(!G||!mb||!G.heavy){S._flakT=0;continue;} S._flakT=(S._flakT||0)-dt*G.heavy/7; let guard=0;
@@ -973,6 +1236,7 @@ function stepFlak(dt,t){ const B=ship.battle; if(!B.flak)B.flak=[]; const planes
   for(let i=B.flak.length-1;i>=0;i--){ const f=B.flak[i]; f.t-=dt; if(f.P.state!=='down')f.last.copy(f.P.p); if(f.t>0)continue; B.flak.splice(i,1); flakBurst(f.last.clone().add(f.off),false); } }
 /* things each ship does for itself in a battle: its guns against the enemy battleship, ramming checks, firing at a surfaced submarine */
 function stepShipBattle(dt,t){ const B=ship.battle; stepCollisions(dt); stepGunsVsSub(dt); ship._G=gunsManned(); ship._mb=mainBody(); if(ship._mb)ship._mb.cache();
+  if(MP.started){ if(ship._mb)pvpCrewFire(dt,ship._mb); return; }
   const E=B.enemy; if(!E||E.sunk||!ship._mb)return; const ep=E.p;
   for(const tr of ship.turrets){ if(!turretManned(tr))continue; if(isMain(tr)&&(manualOn()||tr.order))continue; const b=tr.g.parent.userData.body,lp=b.group.worldToLocal(ep.clone()); let want=Math.atan2(-lp.z,lp.x-tr.x)-(tr.dir<0?Math.PI:0); want=Math.atan2(Math.sin(want),Math.cos(want)); want=clamp(want,-2.55,2.55);
     const df=want-tr.g.rotation.y; tr.g.rotation.y+=clamp(df,-.07*dt,.07*dt); tr.reload=(tr.reload||0)-dt;
@@ -1010,41 +1274,45 @@ function drawTracers(){ const T=ship.battle.tracers; let k=0; for(const tr of T)
 
 
 /* ---------- manual gunnery: click-to-target, a gun director camera, and shells that really fly ---------- */
-const gun={lock:null,pitch:0,fireT:0,manualT:-1e9,az:Math.PI/2,rng:3000,cam:false,ringT:0,live:[],told:false};
+const gun={pitch:0,fireT:0,manualT:-1e9,az:Math.PI/2,rng:3000,cam:false,ringT:0,live:[],told:false};
+Object.defineProperty(gun,'lock',{get(){ return FLEET.active&&FLEET.active.lock||null; },set(v){ if(FLEET.active)FLEET.active.lock=v; }});
 const shellGeo=new THREE.SphereGeometry(.9,6,5), shellMat=new THREE.MeshBasicMaterial({color:0xffd9a0});
 const aimRing=new THREE.Mesh(new THREE.RingGeometry(.86,1,40),new THREE.MeshBasicMaterial({color:0xffb347,side:THREE.DoubleSide,transparent:true,opacity:.85,depthWrite:false})); aimRing.rotation.x=-Math.PI/2; aimRing.visible=false; scene.add(aimRing);
 const lockRing=new THREE.Mesh(new THREE.RingGeometry(.9,1,48),new THREE.MeshBasicMaterial({color:0xff4a3a,side:THREE.DoubleSide,transparent:true,opacity:.9,depthWrite:false,depthTest:false})); lockRing.rotation.x=-Math.PI/2; lockRing.renderOrder=9; lockRing.visible=false; scene.add(lockRing);
-function setLock(K){ gun.lock=K&&!K.sunk&&K.hp>0?K:null; lockRing.visible=!!gun.lock; if(gun.lock){ gun.fireT=0; log('Target: '+gun.lock.name.replace(/^The /,'the ')+'. Main battery locked on.'); } }
-function cycleLock(){ const L=ship.battle.kin.filter(k=>!k.sunk&&k.hp>0); if(!L.length){ log('No targets in sight.'); setLock(null); return; } const i=L.indexOf(gun.lock); setLock(i<0||i===L.length-1?(i===L.length-1&&L.length===1?null:L[0]):L[i+1]); if(!gun.lock)log('Target released.'); }
+function setLock(K){ const S=FLEET.active; if(!S)return; S.lock=tgtValid(K)?K:null; if(S.lock){ S.fireT=0; logLocal('Target: '+S.lock.name.replace(/^The /,'the ')+'. Main battery locked on.'); } if(isClient())mpCmd('lock',{k:tgtRef(S.lock)}); updateLockRing(); }
+function cycleLock(){ const L=targetsList(); if(!L.length){ logLocal('No targets in sight.'); setLock(null); return; } const i=L.indexOf(gun.lock); setLock(i<0||i===L.length-1?(i===L.length-1&&L.length===1?null:L[0]):L[i+1]); if(!gun.lock)log('Target released.'); }
 /* a locked target is tracked, shown with a red ring, and the main battery fires at it whenever a turret is ready */
-function stepLock(dt){ const K=gun.lock; if(!K)return; if(K.sunk||K.hp<=0||!ship.battle.kin.includes(K)){ setLock(null); log('Target lost.'); return; } lockRing.position.copy(K.p); lockRing.position.y=.6; lockRing.scale.setScalar(K.L*.62); gun.fireT-=dt; if(gun.fireT<=0){ gun.fireT=1.5; const b=mainBody(); if(b&&!replay.on&&!ship.crew.abandon&&ship.power>=.2){ const aim=K.p.clone().setY(0); let ready=false; for(const tr of ship.turrets){ if(!isMain(tr)||!tr.alive||tr.g.parent!==b.group||tr.order||!turretManned(tr))continue; if((tr.reload||0)<=0&&turretWant(tr,b,aim).bears){ready=true;break;} } if(ready)fireSalvo(aim,true,K); else {gun.manualT=simT;gun.manualS=ship;} } } }
+function stepLock(dt){ const A=ship; for(const S of FLEET.ships)if(S.lock){ useShip(S); stepLock1(dt); } useShip(A); }
+function stepLock1(dt){ const K=ship.lock; if(!tgtValid(K)){ ship.lock=null; if(ship===FLEET.active)logLocal('Target lost.'); else log('Target lost.'); return; } ship.fireT=(ship.fireT||0)-dt; if(ship.fireT<=0){ ship.fireT=1.5; const b=mainBody(); if(b&&!replay.on&&!ship.crew.abandon&&ship.power>=.2){ const aim=K.p.clone().setY(0); let ready=false; for(const tr of ship.turrets){ if(!isMain(tr)||!tr.alive||tr.g.parent!==b.group||tr.order||!turretManned(tr))continue; if((tr.reload||0)<=0&&turretWant(tr,b,aim).bears){ready=true;break;} } if(ready)fireSalvo(aim,true,K); else ship.manualT=simT; } } }
 const isMain=tr=>tr.big||!ship.turrets.some(t=>t.big&&t.alive);
-function manualOn(){ return gun.manualS===ship&&simT-gun.manualT<45; }
+function manualOn(){ return simT-(ship.manualT==null?-1e9:ship.manualT)<45; }
 function turretWant(tr,b,wp){ const lp=b.group.worldToLocal(wp.clone()); let want=Math.atan2(-lp.z,lp.x-tr.x)-(tr.dir<0?Math.PI:0); want=Math.atan2(Math.sin(want),Math.cos(want)); return {want,lp,bears:Math.abs(want)<2.55}; }
 /* the flash, smoke, recoil and sound of one turret firing */
-function muzzle(tr,b,dir,lz){ const big=tr.big,mz=tr.g.localToWorld(tr.muz.clone()); snd.gun(camera.position.distanceTo(mz)); fx('flash',mz,null,big?1.4:.45);
+function muzzle(tr,b,dir,lz){ if(MP.rec)mpEv({e:'m',s:b.S.idx,ti:b.S.turrets.indexOf(tr),d:[r3(dir.x),r3(dir.y),r3(dir.z)],l:r2(lz)}); const big=tr.big,mz=tr.g.localToWorld(tr.muz.clone()); snd.gun(camera.position.distanceTo(mz)); fx('flash',mz,null,big?1.4:.45);
   for(let k=0;k<(big?12:3);k++){fx('flame',mz,dir.clone().multiplyScalar(rnd(20,60)).add(new V3(rnd(-6,6),rnd(-3,8),rnd(-6,6))),1.3);} for(let k=0;k<(big?8:2);k++)fx('smoke',mz,dir.clone().multiplyScalar(rnd(8,25)),big?2:.7);
   boomLight.position.copy(mz); boomLight.intensity=Math.max(boomLight.intensity,5); shake=Math.max(shake,.7); tmpV.set(1,0,0).applyQuaternion(b.q); if(big)b.w.addScaledVector(tmpV,Math.sign(lz)*.0035); return mz; }
 /* a shell on a ballistic arc from the muzzle to the aim point, with dispersion that grows with range */
-function kinVel(K){ return new V3(Math.cos(K.yaw)*K.spd,0,Math.sin(K.yaw)*K.spd); }
+function kinVel(K){ if(K.isShip)return shipVel(K.S); return new V3(Math.cos(K.yaw)*K.spd,0,Math.sin(K.yaw)*K.spd); }
 function fireLive(tr,b,aim0,lz,K){ const aim=aim0.clone(); if(K&&!K.sunk){ const R0=Math.hypot(aim.x-b.p.x,aim.z-b.p.z); aim.addScaledVector(kinVel(K),clamp(R0/300,1.2,14)*rnd(.7,1.15)); } const dir=aim.clone().sub(tr.g.getWorldPosition(tmpV2)).normalize(); const mz=muzzle(tr,b,dir,lz); const R=Math.hypot(aim.x-mz.x,aim.z-mz.z);
   for(let g=0;g<tr.guns.length;g++){ const a=aim.clone(); const along=dir.clone(); along.y=0; along.normalize(); const across=new V3(-along.z,0,along.x); a.addScaledVector(along,rnd(-1,1)*R*.03+rnd(-1,1)*R*.02).addScaledVector(across,rnd(-1,1)*R*.012+g*2-tr.guns.length); a.y=0;
     const T=clamp(R/300,1.2,14),v=new V3((a.x-mz.x)/T,(a.y-mz.y)/T+9.81*T/2,(a.z-mz.z)/T); const m=new THREE.Mesh(shellGeo,shellMat); m.position.copy(mz); scene.add(m);
-    gun.live.push({p:m.position,v,mesh:m,dmg:rnd(tr.dmg[0],tr.dmg[1])/Math.max(1,tr.guns.length),life:T+2,big:tr.big}); } }
+    gun.live.push({p:m.position,v,mesh:m,dmg:rnd(tr.dmg[0],tr.dmg[1])/Math.max(1,tr.guns.length),life:T+2,big:tr.big,src:b.S}); } }
 /* fire every main turret that can bear on a point; turrets not yet trained fire when they get there */
-function fireSalvo(aim,quiet,K){ if(K&&(K.sunk||K.hp<=0))K=null; const b=mainBody(); if(!b){ if(!quiet)log('No main battery left to fire.'); return 0; } if(replay.on)return 0;
+function fireSalvo(aim,quiet,K){ if(isClient()){ mpCmd('salvo',{a:[r2(aim.x),r2(aim.z)],k:tgtRef(tgtValid(K)?K:null)}); gun.ringT=simT+4; aimRing.position.copy(aim); aimRing.position.y=.4; return 1; } if(K&&!tgtValid(K))K=null; const b=mainBody(); if(!b){ if(!quiet)log('No main battery left to fire.'); return 0; } if(replay.on)return 0;
   if(ship.crew.abandon){ if(!quiet)log('The turrets are empty. The crew has left them.'); return 0; } if(ship.power<.2){ if(!quiet)log('No power to the turrets. They cannot train.'); return 0; }
   let n=0,later=0,blocked=0; for(const tr of ship.turrets){ if(!isMain(tr)||!tr.alive||tr.g.parent!==b.group)continue; if(!turretManned(tr)){blocked++;continue;} const w=turretWant(tr,b,aim); if(!w.bears){blocked++;continue;} tr.order={aim:aim.clone(),lz:w.lp.z,K,off:K?aim.clone().sub(K.p):null}; if(Math.abs(w.want-tr.g.rotation.y)<.05&&(tr.reload||0)<=0)n++; else later++; }
-  if(!manualOn()&&(n+later)){ log('Main battery under manual control. The gunnery officer stands by.'); } gun.manualT=simT; gun.manualS=ship; gun.ringT=simT+4; aimRing.position.copy(aim); aimRing.position.y=.4;
+  if(!manualOn()&&(n+later)){ log('Main battery under manual control. The gunnery officer stands by.'); } ship.manualT=simT; if(ship===FLEET.active){ gun.ringT=simT+4; aimRing.position.copy(aim); aimRing.position.y=.4; }
   if(!quiet){ if(!(n+later))log(blocked?'No turret can bear on that, or none is manned.':'No main turrets to fire.'); else if(later&&!n)log((n+later)+' turret'+(later>1?'s':'')+' training round. They will fire when they bear.'); }
   ship.stats.salvo=(ship.stats.salvo||0)+1; return n+later; }
-function stepGuns(dt,t){ const b=mainBody(); stepLock(dt); stepAA(dt,t);
-  /* turrets under orders: train, then fire */
-  const tick=!ship.battle.enemy||manualOn();
-  for(const tr of ship.turrets){ if(!isMain(tr))continue; if(tick&&(tr.reload||0)>0)tr.reload-=dt; if(tr.order){ const bb=tr.g.parent&&tr.g.parent.userData.body; if(!tr.alive||!bb||!turretManned(tr)){tr.order=null;continue;} const O=tr.order; if(O.K){ if(O.K.sunk||O.K.hp<=0||!ship.battle.kin.includes(O.K))O.K=null; else O.aim.copy(O.K.p).add(O.off).setY(0); } const w=turretWant(tr,bb,tr.order.aim); if(!w.bears){tr.order=null;continue;} const want=clamp(w.want,-2.55,2.55),df=want-tr.g.rotation.y; tr.g.rotation.y+=clamp(df,-.07*dt,.07*dt);
-      if(Math.abs(df)<.05&&(tr.reload||0)<=0){ tr.reload=tr.reloadT; fireLive(tr,bb,tr.order.aim,w.lp.z,tr.order.K); tr.order=null; } } }
+function stepGuns(dt,t){ stepLock(dt); stepAA(dt,t); const A0=ship;
+  /* turrets under orders, on every ship: train, then fire */
+  for(const SS of FLEET.ships){ useShip(SS); const tick=!ship.battle.enemy||manualOn();
+  for(const tr of ship.turrets){ if(!isMain(tr))continue; if(tick&&(tr.reload||0)>0)tr.reload-=dt; if(tr.order){ const bb=tr.g.parent&&tr.g.parent.userData.body; if(!tr.alive||!bb||!turretManned(tr)){tr.order=null;continue;} const O=tr.order; if(O.K){ if(!tgtValid(O.K))O.K=null; else O.aim.copy(O.K.p).add(O.off).setY(0); } const w=turretWant(tr,bb,tr.order.aim); if(!w.bears){tr.order=null;continue;} const want=clamp(w.want,-2.55,2.55),df=want-tr.g.rotation.y; tr.g.rotation.y+=clamp(df,-.07*dt,.07*dt);
+      if(Math.abs(df)<.05&&(tr.reload||0)<=0){ tr.reload=tr.reloadT; fireLive(tr,bb,tr.order.aim,w.lp.z,tr.order.K); tr.order=null; } } } }
+  useShip(A0);
   /* shells in flight */
-  const B=ship.battle; for(let i=gun.live.length-1;i>=0;i--){ const S=gun.live[i]; S.p.x+=(S.v.x-frameVX)*dt; S.p.z+=(S.v.z-frameVZ)*dt; S.p.y+=S.v.y*dt; S.v.y-=9.81*dt; S.life-=dt; let done=S.life<=0; const falling=S.v.y<0;
+  const B=ship.battle; for(let i=gun.live.length-1;i>=0;i--){ const S=gun.live[i],ox=S.p.x,oy=S.p.y,oz=S.p.z; S.p.x+=(S.v.x-frameVX)*dt; S.p.z+=(S.v.z-frameVZ)*dt; S.p.y+=S.v.y*dt; S.v.y-=9.81*dt; S.life-=dt; let done=S.life<=0; const falling=S.v.y<0;
+    if(!done&&MP.started&&Math.min(oy,S.p.y)<70)done=shellSweep(S,ox,oy,oz);
     if(!done&&falling){ for(const K of B.kin){ if(K.hp<=0||K.sunk)continue; const dx=S.p.x-K.p.x,dz=S.p.z-K.p.z,c=Math.cos(K.yaw),s=Math.sin(K.yaw),lx=dx*c+dz*s,lz=-dx*s+dz*c; if(S.p.y<14&&Math.abs(lx)<K.L/2&&Math.abs(lz)<K.W/2+2){ done=true; kinDamage(K,S.dmg,S.p,'shell'); if(K===B.enemy&&Math.random()<.35)log('Hit on '+K.name.replace(/^The /,'the ')+'.'); break; } }
       if(!done&&B.sub&&B.sub.hp>0&&B.sub.peri&&S.p.y<3&&Math.hypot(S.p.x-B.sub.p.x,S.p.z-B.sub.p.z)<22){ done=true; B.sub.hp-=S.dmg*2; explode(S.p.clone(),1.2,false); log(B.sub.hp<=0?'A shell strikes the submarine. She goes down for good.':'Shell splashes around the submarine. She is diving.'); B.sub.hitT=t; }
       if(!done&&typeof berg!=='undefined'&&berg&&Math.hypot(S.p.x-berg.position.x,S.p.z-berg.position.z)<30&&S.p.y<40){ done=true; explode(S.p.clone(),1.1,false); log('The shell bursts on the ice.'); }
@@ -1052,16 +1320,16 @@ function stepGuns(dt,t){ const b=mainBody(); stepLock(dt); stepAA(dt,t);
     if(done){ scene.remove(S.mesh); gun.live.splice(i,1); } } }
 /* the director: where the gun camera sits, high in the tower */
 function directorLocal(){ let x=0,y=supTop(0)+4; for(const T of TOWER){ if(T[3]+T[5]+7>y){ y=T[3]+T[5]+7; x=(T[1]+T[2])/2+3; } } return new V3(x,y,0); }
-function ringTarget(aim){ let best=null,bd=1e9; for(const K of ship.battle.kin){ if(K.sunk||K.hp<=0)continue; const d=Math.hypot(K.p.x-aim.x,K.p.z-aim.z); if(d<K.L*.6+gun.rng*.02&&d<bd){bd=d;best=K;} } return best; }
+function ringTarget(aim){ let best=null,bd=1e9; for(const K of targetsList()){ const d=Math.hypot(K.p.x-aim.x,K.p.z-aim.z); if(d<K.L*.6+gun.rng*.02&&d<bd){bd=d;best=K;} } return best; }
 function gunAim(b){ const d=new V3(Math.cos(gun.az),0,Math.sin(gun.az)).applyQuaternion(b.q); d.y=0; d.normalize(); const c=new V3(); b.world(b.cg.x,0,0,c); return c.addScaledVector(d,gun.rng).setY(0); }
-function gunCamera(dt){ const b=follow&&follow.deadT===Infinity?follow:mainBody(); if(!b){setGunCam(false);return;} if(gun.lock){ const K=gun.lock; if(K.sunk||K.hp<=0||!ship.battle.kin.includes(K))gun.lock=null; else { const lp=b.group.worldToLocal(K.p.clone()); gun.az=Math.atan2(lp.z,lp.x-b.cg.x); gun.rng=clamp(Math.hypot(lp.x-b.cg.x,lp.z),300,9000); } } const dl=directorLocal(); const pos=new V3(); b.world(dl.x,dl.y,dl.z,pos); const aim=gunAim(b); camera.position.copy(pos); if(camera.position.y<SEABED+4)camera.position.y=SEABED+4;
+function gunCamera(dt){ const b=follow&&follow.deadT===Infinity?follow:mainBody(); if(!b){setGunCam(false);return;} if(gun.lock){ const K=gun.lock; if(!tgtValid(K))gun.lock=null; else { const lp=b.group.worldToLocal(K.p.clone()); gun.az=Math.atan2(lp.z,lp.x-b.cg.x); gun.rng=clamp(Math.hypot(lp.x-b.cg.x,lp.z),300,12000); } } const dl=directorLocal(); const pos=new V3(); b.world(dl.x,dl.y,dl.z,pos); const aim=gunAim(b); camera.position.copy(pos); if(camera.position.y<SEABED+4)camera.position.y=SEABED+4;
   const look=aim.clone(); look.y=Math.max(0,pos.y-gun.rng*.06); if(gun.pitch){ const d=look.clone().sub(pos),h=Math.hypot(d.x,d.z),a0=Math.atan2(d.y,h),a=a0+gun.pitch,ch=Math.cos(a)/Math.max(1e-3,Math.cos(a0)); look.set(pos.x+d.x*ch,pos.y+h*Math.tan(a),pos.z+d.z*ch); } if(shake>.01){camera.position.x+=rnd(-1,1)*shake*.4;camera.position.y+=rnd(-1,1)*shake*.4;shake*=Math.exp(-dt*5);} camera.up.set(0,1,0); camera.lookAt(look);
   aimRing.position.copy(aim); aimRing.position.y=.4; aimRing.scale.setScalar(10+gun.rng*.02); aimRing.visible=true;
   let bears=0,ready=0; for(const tr of ship.turrets){ if(!isMain(tr)||!tr.alive||tr.g.parent!==b.group||!turretManned(tr))continue; const w=turretWant(tr,b,aim); if(w.bears){bears++; if(Math.abs(clamp(w.want,-2.55,2.55)-tr.g.rotation.y)<.06&&(tr.reload||0)<=0)ready++;} }
   const brg=((gun.az*180/Math.PI)%360+360)%360; const TK=ringTarget(aim); $('gunWhere').textContent=(gun.lock?'Locked on '+gun.lock.name.replace(/^The /,'the ')+' ('+Math.max(0,Math.round(gun.lock.hp))+'%) · ':TK?'On '+TK.name.replace(/^The /,'the ')+' · ':'')+'Bearing '+String(Math.round(brg)).padStart(3,'0')+'° relative · Range '+Math.round(gun.rng).toLocaleString()+' m · '+bears+' turret'+(bears===1?'':'s')+' bear, '+ready+' ready'; }
-function setGunCam(on){ if(on)exitAA(); gun.cam=on; gun.pitch=0; $('bGun').setAttribute('aria-pressed',on); $('gunHud').hidden=!on; if(!on)aimRing.visible=false; else { if(pilot.on)exitPilot(); if(replay.on)exitReplay(); const E=ship.battle.enemy; if(E){ const b=mainBody(); if(b){ const lp=b.group.worldToLocal(E.p.clone()); gun.az=Math.atan2(lp.z,lp.x-b.cg.x); gun.rng=Math.hypot(lp.x-b.cg.x,lp.z); } } } }
+function setGunCam(on){ if(on)exitAA(); gun.cam=on; gun.pitch=0; $('bGun').setAttribute('aria-pressed',on); $('gunHud').hidden=!on; if(!on)aimRing.visible=false; else { if(pilot.on)exitPilot(); if(replay.on)exitReplay(); const E=ship.battle.enemy||gun.lock||(MP.started?nearestFoeTgt():null); if(E){ const b=mainBody(); if(b){ const lp=b.group.worldToLocal(E.p.clone()); gun.az=Math.atan2(lp.z,lp.x-b.cg.x); gun.rng=Math.hypot(lp.x-b.cg.x,lp.z); } } } }
 function gunKey(k,e){ if(!gun.cam||pilot.on)return false; const step=e.shiftKey?5:1;
-  if(k==='ArrowLeft'||k==='ArrowRight'||k==='ArrowUp'||k==='ArrowDown'){ if(gun.lock){ setLock(null); log('Target released.'); } } if(k==='ArrowLeft'){gun.az-=.02*step;} else if(k==='ArrowRight'){gun.az+=.02*step;} else if(k==='ArrowUp'){gun.rng=clamp(gun.rng+100*step,300,9000);} else if(k==='ArrowDown'){gun.rng=clamp(gun.rng-100*step,300,9000);}
+  if(k==='ArrowLeft'||k==='ArrowRight'||k==='ArrowUp'||k==='ArrowDown'){ if(gun.lock){ setLock(null); log('Target released.'); } } if(k==='ArrowLeft'){gun.az-=.02*step;} else if(k==='ArrowRight'){gun.az+=.02*step;} else if(k==='ArrowUp'){gun.rng=clamp(gun.rng+100*step,300,12000);} else if(k==='ArrowDown'){gun.rng=clamp(gun.rng-100*step,300,12000);}
   else if(k===' '){ const b=mainBody(); if(b){firstAction(); if(gun.lock)fireSalvo(gun.lock.p.clone().setY(0),false,gun.lock); else { const a=gunAim(b),K=ringTarget(a); fireSalvo(a,false,K); } } } else if(k==='t'||k==='T'){ cycleLock(); } else if(k==='a'||k==='A'){setRudder(ship.rudderOrd-5);} else if(k==='d'||k==='D'){setRudder(ship.rudderOrd+5);} else if(k==='Escape'){ if(gun.lock){ setLock(null); log('Target released.'); } else setGunCam(false); } else return false; e.preventDefault(); return true; }
 
 /* ---------- man an anti-aircraft gun yourself ---------- */
@@ -1128,17 +1396,17 @@ function headingOf(b){ const e=b.e,l=Math.hypot(e[0],e[2])||1; return [e[0]/l,e[
 function stationOffset(k){ const sp=FLEET.space; if(FLEET.form==='column')return [-k*sp,0]; if(FLEET.form==='abreast')return [0,(k%2?1:-1)*Math.ceil(k/2)*sp]; return [sp*.7,(k%2?1:-1)*sp*.75*Math.ceil(k/2)]; }
 function fleetInit(){ FLEET.ships=[ship]; FLEET.active=ship; FLEET.battle=ship.battle; ship.name=shipName(ship.cls); ship.title=CLS.title; ship.zebra=false; drawFleet(); }
 function disposeShip(S){ for(const c of S.comps)if(c.room)scene.remove(c.room.water); for(const b of S.bodies)scene.remove(b.group); for(const d of S.debris)scene.remove(d.g); for(const s of S.shots)if(s.mesh)scene.remove(s.mesh); if(S.mats)for(const m of [S.mats.sup,S.mats.deck]){ const i=shipMats.indexOf(m); if(i>=0)shipMats.splice(i,1); } }
-function addFleetShip(cls,opt){ opt=opt||{}; if(FLEET.ships.length>=3){ log('Three ships is the most the simulator can run at once.',true); return null; } if(!opt.load&&FLEET.active.scn){ log('Leave the scenario (pick Sandbox) before adding ships.',true); return null; }
+function addFleetShip(cls,opt){ opt=opt||{}; if(FLEET.ships.length>=3&&!opt.mp){ log('Three ships is the most the simulator can run at once.',true); return null; } if(!opt.load&&FLEET.active.scn){ log('Leave the scenario (pick Sandbox) before adding ships.',true); return null; }
   const A=FLEET.active,G=guideShip(),gb=mbOf(G)||G.bodies.find(b=>b.deadT===Infinity),keepFollow=follow;
   if(ship)ship.zebra=zebra; selectClass(cls); buildShip(); const S=ship; S.battle=FLEET.battle; S.name=opt.name||shipName(cls); S.title=S.name===SIST[cls][0]?CLS.title:S.name.toUpperCase(); zebra=false; S.zebra=false; FLEET.ships.push(S);
   if(!opt.load&&gb){ const k=FLEET.ships.filter(x=>x!==G).indexOf(S)+1; gb.cache(); const [hx,hz]=headingOf(gb),[ox,oz]=stationOffset(k),b=S.bodies[0];
     b.p.x=gb.p.x+hx*ox-hz*oz; b.p.z=gb.p.z+hz*ox+hx*oz; b.q.setFromAxisAngle(new V3(0,1,0),-Math.atan2(hz,hx)); b.cache(); b.sync(); const vm=CLASSES[cls].plant.vmax; S.speed=Math.min(G.speed,vm); S.telegraph=clamp(G.telegraph*CLASSES[G.cls].plant.vmax/vm,0,1); S.vx=S.speed*hx; S.vz=S.speed*hz; S.driftX=0; }
   if(xray)setXray(true); follow=keepFollow; useShip(A); drawFleet(); if(!opt.quiet)log(S.name+' joins the fleet'+(FLEET.hold&&!opt.load?' and takes station.':'.'),true); return S; }
 function removeFleetShip(S){ if(FLEET.ships.length<2){ log('The fleet needs at least one ship.',true); return; } if(S===FLEET.active)commandShip(FLEET.ships.find(x=>x!==S),true); for(const P of FLEET.battle.planes)if(P.S===S)P.S=null; disposeShip(S); FLEET.ships.splice(FLEET.ships.indexOf(S),1); drawFleet(); log(S.name+' leaves the fleet.',true); }
-function commandShip(S,quiet){ if(!S||S===FLEET.active)return; exitAA(); if(gun.cam)setGunCam(false); exitPilot(); if(replay.on)exitReplay(); for(const tr of FLEET.active.turrets)tr.order=null;
-  useShip(S); FLEET.active=S; select(null); hoverC=null; follow=mainBody()||liveBodies()[0]||follow; applyShipUI(); planLvl=1; drawTabs(); drawFleet(); $('bNext').hidden=liveBodies().length<2; if(!quiet)log('You take command of '+S.name+'.',true); }
+function commandShip(S,quiet){ if(!S||S===FLEET.active)return; if(MP.started){ if(S.owner!==MP.me){ if(!quiet)logLocal('That ship is not yours to command.'); return; } if(MP.role==='client'){ if(MP.net)MP.net.send({t:'c',c:'cmd',s:S.idx}); } else { const me=mpMe(); if(me)me.active=S.idx; } } exitAA(); if(gun.cam)setGunCam(false); exitPilot(); if(replay.on)exitReplay(); for(const tr of FLEET.active.turrets)tr.order=null;
+  useShip(S); FLEET.active=S; select(null); hoverC=null; follow=mainBody()||liveBodies()[0]||follow; applyShipUI(); planLvl=1; drawTabs(); drawFleet(); $('bNext').hidden=liveBodies().length<2; if(!quiet)logLocal('You take command of '+S.name+'.'); }
 /* escorts keep station on the flagship, destroyers hunt submarines, and ships that are still afloat pick up survivors */
-function stepFleet(dt,t){ const Fs=FLEET.ships; if(Fs.length<2)return; const A=ship,G=guideShip(),gb=mbOf(G); let k=0;
+function stepFleet(dt,t){ const Fs=FLEET.ships; if(Fs.length<2)return; if(MP.started){ stepFleetPvP(dt); fleetRescueBump(dt); return; } const A=ship,G=guideShip(),gb=mbOf(G); let k=0;
   // one escort detaches to pick up the survivors of any other ship that has been abandoned
   let W2=null,R2=null; if(gb&&!G.crew.abandon){ W2=Fs.find(S=>S!==G&&S.crew.abandon&&(S.crew.inWater>0||S.crew.rafts.length>0)&&S.bodies.some(x=>x.deadT===Infinity)); if(W2){ const wb=W2.bodies.find(x=>x.deadT===Infinity); let bd=1e12; for(const S of Fs){ if(S===G||S===W2||S===FLEET.active||S.crew.abandon)continue; const b=mbOf(S); if(!b)continue; const sb=S.battle.sub; if(sb&&sb.hp>0&&!sb.sunk&&Math.hypot(sb.p.x-b.p.x,sb.p.z-b.p.z)<2200)continue; const d=Math.hypot(b.p.x-wb.p.x,b.p.z-wb.p.z); if(d<bd){bd=d;R2=S;} } } }
   for(const S of Fs){ if(S===G)continue; k++; if(S===FLEET.active||S.crew.abandon)continue; const b=mbOf(S); if(!b)continue; b.cache(); const vmax=CLASSES[S.cls].plant.vmax,sub=S.battle.sub; let tx,tz,want,loose=false;
@@ -1152,6 +1420,8 @@ function stepFleet(dt,t){ const Fs=FLEET.ships; if(Fs.length<2)return; const A=s
     for(const O of Fs){ if(O===S)continue; const ob=mbOf(O)||O.bodies.find(x=>x.deadT===Infinity&&!x.resting); if(!ob)continue; const rx=ob.p.x-b.p.x,rz=ob.p.z-b.p.z,rr=Math.hypot(rx,rz)||1,cl=((S.vx-O.vx)*rx+(S.vz-O.vz)*rz)/rr; if(cl<=.5)continue; const look=120+cl*30,al=rx*bx+rz*bz,cr=bx*rz-bz*rx,clear=CLASSES[O.cls].LH+CLASSES[S.cls].LH*.5+60;
       if(al>-CLASSES[S.cls].LH&&al<look+clear&&Math.abs(cr)<clear){ S.rudderOrd=cr>0?-35:35; want=Math.min(want,vmax*.35); break; } }
     S.telegraph=clamp(want/vmax,0,1); }
+  useShip(A); fleetRescueBump(dt); }
+function fleetRescueBump(dt){ const Fs=FLEET.ships,A=ship;
   // rescue: swimmers and rafts close to a ship that is still afloat and nearly stopped
   FLEET.rescT=(FLEET.rescT||0)-dt; if(FLEET.rescT<=0){ FLEET.rescT=2; for(const R of Fs){ if(R.crew.abandon)continue; const rb=mbOf(R); if(!rb||R.speed>5)continue; for(const S of Fs){ if(S===R)continue; const C=S.crew; let n=0;
       for(const f of C.figs)if(f.state==='swim'&&Math.hypot(f.wp.x-rb.p.x,f.wp.z-rb.p.z)<230){ f.state='gone'; C.inWater-=f.n; C.safe+=f.n; n+=f.n; }
@@ -1165,8 +1435,8 @@ function stepFleet(dt,t){ const Fs=FLEET.ships; if(Fs.length<2)return; const A=s
       if(rv>1.5&&!(FLEET.bump[key]>simT)){ FLEET.bump[key]=simT+40; rammed({name:S1.name,spd:rv,hp:1e9,yaw:0,p:new V3(),hit:false},b2,lx,side); useShip(S1); headOn({name:S2.name,hp:1e9,yaw:0,p:new V3(),spd:0,hit:false},b1); } else S1.speed*=.97; } } }
   useShip(A); }
 /* the fleet panel */
-function fleetStatus(S){ const b=mbOf(S); if(!b)return S.bodies.some(x=>x.deadT===Infinity&&!x.resting)?'going down':'sunk'; let w=0; for(const c of S.comps)w+=c.water; return (S.crew.abandon?'abandoned · ':S.hunting?'hunting sub · ':S.rescuing?'picking up survivors · ':'')+Math.round(S.speed*1.944)+' kn'+(w>300?' · '+Math.round(w*1.025).toLocaleString()+' t water':'')+(Math.abs(b.list)>3?' · list '+Math.abs(b.list).toFixed(0)+'°':''); }
-function drawFleet(){ const el=$('fleetList'); if(!el)return; el.innerHTML=''; const many=FLEET.ships.length>1; $('fleetOpts').hidden=!many; FLEET.rows=[];
+function fleetStatus(S){ const b=mbOf(S); if(!b)return S.bodies.some(x=>x.deadT===Infinity&&!x.resting)?'going down':'sunk'; if(isFoe(S))return Math.round(S.speed*1.944)+' kn'+(Math.abs(b.list)>3?' · list '+Math.abs(b.list).toFixed(0)+'°':'')+(S.crew.abandon?' · abandoned':''); let w=0; for(const c of S.comps)w+=c.water; return (S.crew.abandon?'abandoned · ':S.hunting?'hunting sub · ':S.rescuing?'picking up survivors · ':'')+Math.round(S.speed*1.944)+' kn'+(w>300?' · '+Math.round(w*1.025).toLocaleString()+' t water':'')+(Math.abs(b.list)>3?' · list '+Math.abs(b.list).toFixed(0)+'°':''); }
+function drawFleet(){ const el=$('fleetList'); if(!el)return; if(MP.started){ drawFleetMP(); return; } el.innerHTML=''; const many=FLEET.ships.length>1; $('fleetOpts').hidden=!many; FLEET.rows=[];
   if(!many)return; FLEET.ships.forEach((S,i)=>{ const row=document.createElement('div'); row.className='row'; row.style.margin='2px 0'; row.style.flexWrap='nowrap'; const t=document.createElement('span'); t.style.flex='1'; t.style.minWidth='0'; t.style.lineHeight='1.2';
     const nm=document.createElement('b'); nm.textContent=S.name+(i===0?' (flagship)':''); nm.style.fontWeight=S===FLEET.active?'700':'500'; const st=document.createElement('span'); st.style.display='block'; st.style.color='var(--ink-soft)'; st.style.fontSize='12.5px'; t.append(nm,st);
     const cb=document.createElement('button'); cb.className='btn'; cb.textContent=S===FLEET.active?'In command':'Command'; cb.disabled=S===FLEET.active; cb.setAttribute('aria-pressed',S===FLEET.active); cb.onclick=()=>commandShip(S);
@@ -1178,7 +1448,7 @@ function zebraUI(){ $('bZebra').setAttribute('aria-pressed',zebra); $('bZebra').
 /* ---------- running torpedoes, the submarine, the destroyer's own weapons, and ships on a collision course ---------- */
 const torpGeo=new THREE.CylinderGeometry(.27,.27,7,8); torpGeo.rotateZ(Math.PI/2); const torpMat=new THREE.MeshLambertMaterial({color:0x2c3136});
 function launchTorpedo(from,dir,opt){ const B=ship.battle,m=new THREE.Mesh(torpGeo,torpMat); scene.add(m); const h=dir.clone(); h.y=0; h.normalize(); m.position.copy(from); m.position.y=-2.6; m.rotation.y=-Math.atan2(h.z,h.x);
-  B.torps.push({p:m.position,h,spd:opt.spd||21,life:opt.range||4200,own:!!opt.own,mesh:m,wakeT:0,armed:opt.arm||40,label:opt.label||'torpedo'}); if(!opt.quiet)log(opt.msg||'Torpedo in the water.'); }
+  B.torps.push({p:m.position,h,spd:opt.spd||21,life:opt.range||4200,own:!!opt.own,src:opt.src||null,mesh:m,wakeT:0,armed:opt.arm||40,label:opt.label||'torpedo'}); if(!opt.quiet)log(opt.msg||'Torpedo in the water.'); }
 /* aim at where the target will be, given its speed */
 function leadDir(from,target,tv,spd,err){ let t=target.distanceTo(from)/spd; const aim=new V3(); for(let i=0;i<8;i++){ aim.copy(target).addScaledVector(tv,t).sub(from); aim.y=0; t=Math.min(600,aim.length()/spd); } aim.normalize(); if(err){ const a=rnd(-err,err),c=Math.cos(a),s=Math.sin(a); aim.set(aim.x*c-aim.z*s,0,aim.x*s+aim.z*c); } return aim; }
 function ownVel(){ return shipVel(ship); }
@@ -1189,7 +1459,7 @@ function stepTorps(dt,t){ const B=ship.battle;
   for(let i=B.torps.length-1;i>=0;i--){ const tp=B.torps[i]; tp.p.addScaledVector(tp.h,tp.spd*dt); tp.p.x-=frameVX*dt; tp.p.z-=frameVZ*dt; tp.life-=tp.spd*dt; tp.armed-=tp.spd*dt;
     tp.wakeT-=dt; if(tp.wakeT<=0){ tp.wakeT=.14; tmpV.copy(tp.p); tmpV.y=waveY(tmpV.x,tmpV.z,t)+.25; fx('foam',tmpV,null,.55); }
     let done=tp.life<=0;
-    if(!done&&tp.armed<=0){ if(!tp.own){ const A0=ship; for(const S of FLEET.ships){ if(!S.bodies.some(b=>b.deadT===Infinity&&Math.abs(b.p.x-tp.p.x)<(b.xb-b.xa)*.6+20&&Math.abs(b.p.z-tp.p.z)<(b.xb-b.xa)*.6+20))continue; useShip(S); for(const b of liveBodies()){ const h=torpHitsBody(tp,b); if(h){ done=true; if(b.deadT===Infinity)torpedoHit(b,h.x,h.side); else explode(tp.p.clone(),1.2); break; } } if(done)break; } useShip(A0); }
+    if(!done&&tp.armed<=0){ if(!tp.own){ const A0=ship; for(const S of FLEET.ships){ if(S===tp.src)continue; if(!S.bodies.some(b=>b.deadT===Infinity&&Math.abs(b.p.x-tp.p.x)<(b.xb-b.xa)*.6+20&&Math.abs(b.p.z-tp.p.z)<(b.xb-b.xa)*.6+20))continue; useShip(S); for(const b of liveBodies()){ const h=torpHitsBody(tp,b); if(h){ done=true; if(b.deadT===Infinity){ torpedoHit(b,h.x,h.side); if(tp.src&&FLEET.ships.includes(tp.src)){ const tn=S.name; useShip(tp.src); log('Torpedo hit on '+tn+'!'); useShip(S); } } else explode(tp.p.clone(),1.2); break; } } if(done)break; } useShip(A0); }
       if(!done)for(const K of B.kin){ if(K.hp<=0||K.sunk)continue; if(torpHitsKin(tp,K)){ done=true; kinDamage(K,tp.own?K.torpDmg||28:12,tp.p,'torpedo'); break; } } }
     if(done){ scene.remove(tp.mesh); B.torps.splice(i,1); if(tp.life<=0&&Math.random()<.5&&!tp.own)log('A torpedo runs out and sinks.'); } } }
 
@@ -1220,8 +1490,8 @@ function startSub(){ const B=ship.battle; if(B.sub){log('There is already a subm
 
 /* the destroyer's own weapons */
 function torpMounts(){ const L=liveBodies(),out=[]; for(const b of L)for(const p of b.parts)if(p.userData.label==='torpedo mount'&&!p.userData.gone)out.push([p,b]); return out; }
-function torpedoAttack(){ const B=ship.battle,E=B.enemy; if(!E||E.sunk){log('No surface target.');return;} const mts=torpMounts().filter(([p])=>!p.userData.fired); if(!mts.length){log('No torpedo mounts left to fire.');return;} if(ship.crew.abandon){log('No one is left at the tubes.');return;}
-  const [p,b]=mts[0]; p.userData.fired=true; const from=new V3(); p.getWorldPosition(from); from.y=0; const ev=new V3(Math.cos(E.yaw)*E.spd,0,Math.sin(E.yaw)*E.spd); let n=0; for(let i=0;i<5;i++){ const d=leadDir(from,E.p,ev,23,0); const off=(i-2)*.03,c=Math.cos(off),s=Math.sin(off); d.set(d.x*c-d.z*s,0,d.x*s+d.z*c); launchTorpedo(from.clone().addScaledVector(d,12),d,{spd:23,range:9000,own:true,quiet:true,arm:60}); n++; }
+function torpedoAttack(){ const B=ship.battle; let E=B.enemy,ev=null; if(MP.started){ E=ship.lock&&ship.lock.isShip&&tgtValid(ship.lock)&&ship.lock.S.side!==ship.side?ship.lock:nearestFoeTgt(); if(!E){log('No enemy ship to aim at.');return;} ev=shipVel(E.S); } else if(!E||E.sunk){log('No surface target.');return;} const mts=torpMounts().filter(([p])=>!p.userData.fired); if(!mts.length){log('No torpedo mounts left to fire.');return;} if(ship.crew.abandon){log('No one is left at the tubes.');return;}
+  const [p,b]=mts[0]; p.userData.fired=true; const from=new V3(); p.getWorldPosition(from); from.y=0; if(!ev)ev=new V3(Math.cos(E.yaw)*E.spd,0,Math.sin(E.yaw)*E.spd); let n=0; for(let i=0;i<5;i++){ const d=leadDir(from,E.p,ev,23,0); const off=(i-2)*.03,c=Math.cos(off),s=Math.sin(off); d.set(d.x*c-d.z*s,0,d.x*s+d.z*c); launchTorpedo(from.clone().addScaledVector(d,12),d,{spd:23,range:9000,own:!MP.started,src:MP.started?ship:null,quiet:true,arm:60}); n++; }
   log('Torpedo attack. Five fish away from the '+(p.position.x>0?'forward':'after')+' mount, running at 45 knots.'); }
 function depthCharges(){ const B=ship.battle; if(CLS.id!=='fletcher'){log('Only the destroyer carries depth charges.');return;} if(ship.crew.abandon){log('No one is left aft.');return;} const b=liveBodies()[0]; if(!b||ship.speed<3){log('She needs way on to drop a pattern.');return;} B.dcT=B.dcT||0; if(B.dcT>0)return; B.dcT=14;
   const S=B.sub; for(let i=0;i<6;i++){ const p=new V3(); b.world(b.xa+4+rnd(0,6),WL,rnd(-6,6),p); p.y=0; const depth=S?Math.min(-12,S.p.y+rnd(-8,8)):-40; B.charges.push({p,depth,t:0,mesh:(()=>{const m=cyl(.5,.5,1.1,M.dark,8);scene.add(m);return m;})()}); } log('Depth charge pattern away, set to '+Math.round(-(S?S.p.y:40))+' m.'); }
@@ -1329,13 +1599,13 @@ function checkSupport(){ ship.supportDirty=false; for(const b of liveBodies()){ 
 function compAt(body,x,y,z){ let best=null,bd=1e9; for(const c of body.comps){ const dx=Math.max(c.x0-x,0,x-c.x1),dy=Math.max(c.y0-y,0,y-c.y1),dz=Math.max(c.z0-z,0,z-c.z1),d=dx*dx+dy*dy+dz*dz; if(d<bd){bd=d;best=c;if(d===0)break;} } return best; }
 function connOf(a,b){ if(!a||!b||a===b)return null; return ship.connMap.get(Math.min(a.id,b.id)+'_'+Math.max(a.id,b.id))||null; }
 function rupture(a,b,area){ const cn=connOf(a,b); if(cn){cn.rupt=Math.max(cn.rupt,area); cn.jam=true;} }
-function addHole(c,pos,area,n,hidden,scorch){ const h={c,pos:pos.clone(),area,area0:area,n:n?n.clone():null,hidden:!!hidden,patched:false,bornT:simT,marker:null};
+function addHole(c,pos,area,n,hidden,scorch){ if(MP.rec&&!hidden&&n)mpEv({e:'h',s:c.body.S.idx,c:c.id,p:[r3(pos.x),r3(pos.y),r3(pos.z)],a:r3(area),n:[r3(n.x),r3(n.y),r3(n.z)],sc:scorch?1:0}); const h={c,pos:pos.clone(),area,area0:area,n:n?n.clone():null,hidden:!!hidden,patched:false,bornT:simT,marker:null};
   if(!hidden&&n){ const r=Math.sqrt(area/Math.PI),g=new THREE.Group(); const ring=new THREE.Mesh(jagged(r,16,1.22),ringMat); ring.position.z=-.02; g.add(new THREE.Mesh(jagged(r,16,1),holeMat)); g.add(ring); if(scorch){ const sc=new THREE.Mesh(new THREE.PlaneGeometry(1,1),scorchMat); sc.scale.setScalar(r*5+5); sc.position.z=-.05; sc.rotation.z=Math.random()*6; g.add(sc); }
     g.position.copy(pos).addScaledVector(n,.12); g.quaternion.setFromUnitVectors(new V3(0,0,1),n); g.userData.hole=h; h.marker=g; h.ring=ring; c.body.group.add(g); ship.pickables.push(g.children[0],ring); }
   ship.holes.push(h); return h; }
 function fmtT(t){t=Math.floor(t);const h=Math.floor(t/3600),m=Math.floor(t/60)%60,s=t%60;return (h?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 const logEl=document.getElementById('log');
-function log(msg,np){ if(quietLog)return; if(!np&&FLEET.ships.length>1&&ship&&ship!==FLEET.active&&ship.name)msg=ship.name+': '+msg; const li=document.createElement('li'); li.innerHTML='<time>'+fmtT(simT)+'</time>'; li.appendChild(document.createTextNode(msg)); logEl.prepend(li); while(logEl.children.length>40)logEl.lastChild.remove(); }
+function log(msg,np){ if(quietLog)return; if(MP.rec){ const S0=ship&&FLEET.ships.includes(ship)?ship:null; mpEv({e:'l',m:msg,s:np||!S0?-1:S0.idx,sd:S0?S0.side:null,np:np?1:0}); if(!np&&S0&&FLEET.active&&S0.side!==FLEET.active.side)return; } if(!np&&FLEET.ships.length>1&&ship&&ship!==FLEET.active&&ship.name)msg=ship.name+': '+msg; const li=document.createElement('li'); li.innerHTML='<time>'+fmtT(simT)+'</time>'; li.appendChild(document.createTextNode(msg)); logEl.prepend(li); while(logEl.children.length>40)logEl.lastChild.remove(); }
 
 /* ---------- damage ---------- */
 function ignite(c,level,quiet){ if(!c.flammable){if(!quiet)log(c.name+' holds nothing that burns.');return false;} if(c.water/c.vol>.5){if(!quiet)log(c.name+' is under water and will not light.');return false;}
@@ -1387,6 +1657,7 @@ function splitBody(body,xbRaw,quiet){
   let xb=null,bd=1e9; for(const S of SECS)for(const x of [S[1],S[2]]){ if(x-body.xa<LH*.18||body.xb-x<LH*.18)continue; const d=Math.abs(x-xbRaw); if(d<bd){bd=d;xb=x;} } if(xb==null||(!quiet&&(liveBodies().length>=3||ship.breaks.some(x=>Math.abs(x-xb)<LH*.5))))return false; ship.breaks.push(xb);
   const mk=(f)=>{ const cols=body.cols.filter(c=>f(c.x)),comps=body.comps.filter(c=>f(c.xc)); return [cols,comps]; };
   const [colsF,compsF]=mk(x=>x>xb),[colsA,compsA]=mk(x=>x<xb); if(colsF.length<4||colsA.length<4)return false;
+  if(MP.rec)mpEv({e:'sp',s:body.S.idx,b:body.id,x:xb});
   body.cache(); body.deadT=simT;
   const make=(cols,comps,xa,xe,jagA,jagB)=>{ const nb=new Body(cols,comps,xa,xe,pieceKG(cols)); nb.parent=body; ship.bodies.push(nb);
     body.world(nb.cg.x,nb.cg.y,nb.cg.z,nb.p); nb.q.copy(body.q); tmpV.copy(nb.p).sub(body.p); nb.v.copy(body.v).add(tmpV2.copy(body.w).cross(tmpV)); nb.w.copy(body.w);
@@ -1414,7 +1685,7 @@ function updateStressVis(){ for(const cn of ship.conns){ const show=xray&&cn.rup
     if(!cn.vis){ const m=new THREE.Mesh(stressGeo,new THREE.MeshBasicMaterial({transparent:true,opacity:.55,depthTest:false,depthWrite:false,side:THREE.DoubleSide})); m.renderOrder=7; m.scale.set(Math.max(1,cn.fw-.4),Math.max(1,cn.fh-.4),1); if(cn.axis==='x')m.rotation.y=Math.PI/2; else if(cn.axis==='y')m.rotation.x=Math.PI/2; m.position.set(cn.pos.x,cn.axis==='y'?cn.pos.y:cn.yb+cn.fh/2,cn.pos.z); cn.vis=m; }
     if(cn.vis.parent!==cn.a.body.group)cn.a.body.group.add(cn.vis); cn.vis.visible=true; cn.vis.material.color.setHex(cn.shored&&cn.stress<.5?0x4fd08a:0xffd23a).lerp(cTmp.setHex(0xff2a1a),clamp((cn.stress-.3)/.7,0,1)); } }
 function checkBreaks(){ updateStressVis();
-  for(const b of liveBodies())for(const p of b.parts){ const bx=p.userData.box; if(!bx||p.userData.charred)continue; for(const c of b.comps)if(c.sup&&c.fire>.6&&c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ p.userData.charred=true; p.material=M.char; break; } }
+  for(const b of liveBodies())for(const p of b.parts){ const bx=p.userData.box; if(!bx||p.userData.charred)continue; for(const c of b.comps)if(c.sup&&c.fire>.6&&c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ if(MP.rec)mpEv({e:'ch',s:ship.idx,pid:p.userData.pid}); p.userData.charred=true; p.material=M.char; break; } }
   for(const b of liveBodies())if(Math.abs(b.list)>105&&!b.dumped){ b.dumped=true; let n=0; for(const p of b.parts.slice())if(!ship.mach.includes(p)&&!p.userData.fixed&&p.position.y>DECK0&&(p.userData.heavy||Math.random()<.5)){blowOff(p,b,b.v.clone(),new V3(rnd(-.3,.3),0,rnd(-.3,.3)));n++;} if(n)log('The ship rolls over. Turrets slide from their barbettes and the upperworks tear away.'); }
   for(let i=0;i<SECS.length;i++){ if(ship.secBroken[i])continue; const d=ship.secDamage[i]; if(d<1)continue; const x=(SECS[i][1]+SECS[i][2])/2;
     const b=liveBodies().find(b=>x>b.xa&&x<b.xb); if(!b)continue; if(d>=1.4||(d>=1&&Math.abs(b.trim)>6)){ ship.secBroken[i]=true; splitBody(b,Math.abs(SECS[i][1])<Math.abs(SECS[i][2])?SECS[i][1]:SECS[i][2]);} }
@@ -1514,7 +1785,8 @@ function simulate(simDt){
 function setValve(c,on){ if(on&&!c.valve){ const s=c.zc>=0?1:-1; c.valve={c,pos:new V3(c.xc,c.y0+.3,c.zc+s*c.dz*.45),area:c.mag>=0?3:.6,hidden:true,valve:true,bornT:simT}; ship.holes.push(c.valve); }
   else if(!on&&c.valve){ ship.holes.splice(ship.holes.indexOf(c.valve),1); c.valve=null; } }
 function applyCompTool(c){
-  select(c);
+  select(c); if(isClient()){ if(['flood','pump','hose'].includes(tool))mpCmd('comp',{id:c.id,tool}); return; } compTool(c,tool); }
+function compTool(c,tool){
   if(tool==='fire')ignite(c,.6);
   else if(tool==='flood'){ setValve(c,!c.valve); log((c.valve?'Sea valve open in ':'Sea valve shut in ')+c.name+'.'); }
   else if(tool==='pump'){ c.pump=!c.pump; log((c.pump?'Pump running in ':'Pump stopped in ')+c.name+'.'); }
@@ -1524,11 +1796,11 @@ function select(c){ if(selected)selected.edges.material=edgeMat; selected=c; if(
 const ray=new THREE.Raycaster(), ndc=new THREE.Vector2();
 function bodyOf(o){while(o&&!o.userData.body)o=o.parent;return o?o.userData.body:null;}
 function clickScene(cx,cy){
-  if(replay.on||pilot.on)return; if(AAG.on){ AAG.burst=.35; firstAction(); return; } if(tool==='look'){ const m=aaMountAt(cx,cy); if(m){ armAA(m); return; } if(FLEET.ships.length>1){ const r1=canvas.getBoundingClientRect(); ndc.set((cx-r1.left)/r1.width*2-1,-(cy-r1.top)/r1.height*2+1); ray.setFromCamera(ndc,camera); const h1=ray.intersectObjects(allPickables(),true)[0],b1=h1&&bodyOf(h1.object); if(b1&&b1.S&&b1.S!==ship){ commandShip(b1.S); return; } } } if(gun.cam){ const b=mainBody(); if(!b)return; firstAction(); const r0=canvas.getBoundingClientRect(); ndc.set((cx-r0.left)/r0.width*2-1,-(cy-r0.top)/r0.height*2+1); ray.setFromCamera(ndc,camera); scene.updateMatrixWorld(); const tg=ray.intersectObjects(battleGroup.children,true); if(tg.length){ let o=tg[0].object; while(o&&o.parent!==battleGroup)o=o.parent; const K=ship.battle.kin.find(k=>k.g===o); if(K){ if(gun.lock===K){ setLock(null); log('Target released.'); } else setLock(K); return; } } const a=gunAim(b),K=ringTarget(a); fireSalvo(a,false,K); return; } if(tool==='look')return; const r=canvas.getBoundingClientRect(); ndc.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1); ray.setFromCamera(ndc,camera);
+  if(replay.on||pilot.on)return; if(AAG.on){ AAG.burst=.35; firstAction(); return; } if(tool==='look'){ const m=MP.started?null:aaMountAt(cx,cy); if(m){ armAA(m); return; } if(FLEET.ships.length>1){ const r1=canvas.getBoundingClientRect(); ndc.set((cx-r1.left)/r1.width*2-1,-(cy-r1.top)/r1.height*2+1); ray.setFromCamera(ndc,camera); const h1=ray.intersectObjects(allPickables(),true)[0],b1=h1&&bodyOf(h1.object); if(b1&&b1.S&&b1.S!==ship){ if(MP.started&&b1.S.owner!==MP.me){ if(isFoe(b1.S)){ if(gun.lock&&gun.lock.S===b1.S){ setLock(null); logLocal('Target released.'); } else setLock(b1.S.tgt); } else { const P=MP.players.find(p=>p.id===b1.S.owner); logLocal(b1.S.name+(P?' is '+P.name+'’s ship.':' has no captain.')); } return; } commandShip(b1.S); return; } } } if(gun.cam){ const b=mainBody(); if(!b)return; firstAction(); const r0=canvas.getBoundingClientRect(); ndc.set((cx-r0.left)/r0.width*2-1,-(cy-r0.top)/r0.height*2+1); ray.setFromCamera(ndc,camera); scene.updateMatrixWorld(); const tg=ray.intersectObjects(battleGroup.children,true); if(tg.length){ let o=tg[0].object; while(o&&o.parent!==battleGroup)o=o.parent; const K=ship.battle.kin.find(k=>k.g===o); if(K){ if(gun.lock===K){ setLock(null); log('Target released.'); } else setLock(K); return; } } if(MP.started){ const fh=ray.intersectObjects(foePickables(),true)[0],fb=fh&&bodyOf(fh.object); if(fb&&fb.S&&isFoe(fb.S)){ if(gun.lock&&gun.lock.S===fb.S){ setLock(null); logLocal('Target released.'); } else setLock(fb.S.tgt); return; } } const a=gunAim(b),K=ringTarget(a); fireSalvo(a,false,K); return; } if(tool==='look')return; const r=canvas.getBoundingClientRect(); ndc.set((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1); ray.setFromCamera(ndc,camera);
   scene.updateMatrixWorld();
-  if(tool==='guns'){ const tg=ray.intersectObjects(battleGroup.children.concat(typeof berg!=='undefined'&&berg?[berg]:[]),true); let aim=null,K=null; if(tg.length){ aim=tg[0].point.clone(); let o=tg[0].object; while(o&&o.parent!==battleGroup)o=o.parent; K=ship.battle.kin.find(k=>k.g===o)||null; } else { const own=ray.intersectObjects(allPickables(),true); if(own.length){ log('That is one of ours. Aim at the sea or at another ship.'); return; } const t=-ray.ray.origin.y/ray.ray.direction.y; if(t>0)aim=ray.ray.origin.clone().addScaledVector(ray.ray.direction,t); } if(!aim){ log('Aim at the sea, not the sky.'); return; } aim.y=0; firstAction(); if(K&&gun.lock!==K)setLock(K); fireSalvo(aim,false,K); return; } const hits=ray.intersectObjects(allPickables(),true).filter(h=>bodyOf(h.object)&&bodyOf(h.object).deadT===Infinity);
+  if(tool==='guns'){ const tg=ray.intersectObjects(battleGroup.children.concat(typeof berg!=='undefined'&&berg?[berg]:[]),true); let aim=null,K=null; if(tg.length){ aim=tg[0].point.clone(); let o=tg[0].object; while(o&&o.parent!==battleGroup)o=o.parent; K=ship.battle.kin.find(k=>k.g===o)||null; } else { const own=ray.intersectObjects(allPickables(),true),ob=own.length?bodyOf(own[0].object):null; if(MP.started&&ob&&ob.S&&isFoe(ob.S)){ aim=own[0].point.clone(); K=ob.S.tgt; } else { if(own.length){ log('That is one of ours. Aim at the sea or at another ship.'); return; } const t=-ray.ray.origin.y/ray.ray.direction.y; if(t>0)aim=ray.ray.origin.clone().addScaledVector(ray.ray.direction,t); } } if(!aim){ log('Aim at the sea, not the sky.'); return; } aim.y=0; firstAction(); if(K&&gun.lock!==K)setLock(K); fireSalvo(aim,false,K); return; } const hits=ray.intersectObjects(allPickables(),true).filter(h=>bodyOf(h.object)&&bodyOf(h.object).deadT===Infinity);
   if(!hits.length){ if(tool==='bomb'||tool==='torpedo'){ const t=-ray.ray.origin.y/ray.ray.direction.y; if(t>0){tmpV.copy(ray.ray.origin).addScaledVector(ray.ray.direction,t); const pos=tmpV.clone(); explode(pos,.9,false); log('Miss. The shot lands in the sea.');} } return; }
-  const hit=hits[0],body=bodyOf(hit.object); if(body.S&&body.S!==ship)commandShip(body.S); body.cache(); const lp=body.group.worldToLocal(hit.point.clone());
+  const hit=hits[0],body=bodyOf(hit.object); if(body.S&&body.S!==ship){ if(MP.started&&body.S.owner!==MP.me){ logLocal(isFoe(body.S)?'That is an enemy ship. Use the Main guns tool on her.':'That ship is not yours.'); return; } commandShip(body.S); } body.cache(); const lp=body.group.worldToLocal(hit.point.clone());
   const n=hit.face?hit.face.normal.clone().transformDirection(hit.object.matrixWorld).applyQuaternion(body.q.clone().invert()):new V3(0,1,0);
   const dk=deckY(lp.x/LH); firstAction();
   if(tool==='torpedo'){ const side=lp.z>=0?1:-1,x=clamp(lp.x,body.xa+3,body.xb-3); tmpV.set(0,0,side).applyQuaternion(body.q); tmpV.y=0; tmpV.normalize(); const from=hit.point.clone().addScaledVector(tmpV,520); from.y=0;
@@ -1537,11 +1809,11 @@ function clickScene(cx,cy){
   else if(tool==='breach'){ const d=+document.getElementById('sB').value, in_=lp.clone().addScaledVector(n,-1.2); const c=compAt(body,in_.x,in_.y,in_.z);
     addHole(c,lp,Math.PI*d*d/4,n); log('Hull breached at '+c.name+', '+d.toFixed(1)+' m across.'); select(c); body.resting=false; }
   else if(tool==='patch'){ let best=null,bd=64; for(const h of ship.holes){ if(h.hidden||h.patched||h.c.body!==body)continue; const dd=h.pos.distanceToSquared(lp); if(dd<bd){bd=dd;best=h;} }
-    if(!best){log('No open breach within reach of that spot.');return;} patchHole(best); log('Breach at '+best.c.name+' shored up'+(best.area0>10?'. It still leaks badly.':'.')); }
+    if(!best){log('No open breach within reach of that spot.');return;} if(isClient()){ mpCmd('patch',{cid:best.c.id,p:[best.pos.x,best.pos.y,best.pos.z]}); return; } patchHole(best); log('Breach at '+best.c.name+' shored up'+(best.area0>10?'. It still leaks badly.':'.')); }
   else { const in_=lp.clone().addScaledVector(n,-1.5); applyCompTool(compAt(body,in_.x,in_.y,in_.z)); }
 }
 function counterFlood(quiet){
-  const b=follow&&follow.deadT===Infinity?follow:liveBodies()[0]; const L=b.list; if(Math.abs(L)<1){if(!quiet)log('List is under one degree. Nothing to correct.');return;}
+  const b=follow&&follow.deadT===Infinity&&follow.S===ship?follow:(mainBody()||liveBodies()[0]); if(!b)return; const L=b.list; if(Math.abs(L)<1){if(!quiet)log('List is under one degree. Nothing to correct.');return;}
   const side=L>0?-1:1; const cand=b.comps.filter(c=>c.lvl<=1&&c.kind==='tank'&&Math.abs(c.zc)>.5&&Math.sign(c.zc)===side&&!c.valve&&c.water/c.vol<.2&&!ship.holes.some(h=>h.c===c&&!h.valve)).sort((a,c2)=>Math.abs(a.xc-b.cg.x)-Math.abs(c2.xc-b.cg.x)).slice(0,5);
   if(!cand.length){if(!quiet)log('No dry voids left on the high side.');return;} cand.forEach(c=>{setValve(c,true);c.ballast=true;}); ship.counter={body:b,comps:cand,sign:Math.sign(L)}; log('Counter-flooding '+cand.length+' '+(side>0?'starboard':'port')+' voids.');
 }
@@ -1554,7 +1826,7 @@ canvas.addEventListener('pointermove',e=>{ const p=ptrs.get(e.pointerId); if(!p)
   if(ptrs.size===1&&AAG.on){AAG.yaw+=dx*.0035;AAG.pitch=clamp(AAG.pitch-dy*.0035,-.15,1.48);} else if(ptrs.size===1&&pilot.on){pilot.yaw+=dx*.0042;pilot.pitch=clamp(pilot.pitch-dy*.0042,-1.35,1.35);} else if(ptrs.size===1&&gun.cam){ if(gun.lock){ gun.pitch=clamp(gun.pitch-dy*.003,-.6,1.3); } else { gun.az+=dx*.0025; gun.pitch=clamp(gun.pitch-dy*.003,-.6,1.3); } } else if(ptrs.size===2&&gun.cam){} else if(ptrs.size===1){cam.az+=dx*.005;cam.el=clamp(cam.el+dy*.004,-1.3,1.5);} else if(ptrs.size===2){const q=[...ptrs.values()],d=Math.hypot(q[0].x-q[1].x,q[0].y-q[1].y); if(pinch)cam.dist=clamp(cam.dist*pinch/d,40,2500); pinch=d;} });
 const up=e=>{ ptrs.delete(e.pointerId); if(downAt&&Math.hypot(e.clientX-downAt.x,e.clientY-downAt.y)<7&&performance.now()-downAt.t<500)clickScene(e.clientX,e.clientY); downAt=null; pinch=0; };
 canvas.addEventListener('pointerup',up); canvas.addEventListener('pointercancel',e=>{ptrs.delete(e.pointerId);downAt=null;});
-canvas.addEventListener('wheel',e=>{e.preventDefault(); if(AAG.on)return; if(gun.cam){ if(!gun.lock)gun.rng=clamp(gun.rng*Math.exp(e.deltaY*.0008),300,9000); return; } if(pilot.on){pilot.speed=clamp(pilot.speed*Math.exp(-e.deltaY*.001),2,120);return;}cam.dist=clamp(cam.dist*Math.exp(e.deltaY*.0012),40,2500);},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault(); if(AAG.on)return; if(gun.cam){ if(!gun.lock)gun.rng=clamp(gun.rng*Math.exp(e.deltaY*.0008),300,12000); return; } if(pilot.on){pilot.speed=clamp(pilot.speed*Math.exp(-e.deltaY*.001),2,120);return;}cam.dist=clamp(cam.dist*Math.exp(e.deltaY*.0012),40,2500);},{passive:false});
 const CAMS={beam:[-Math.PI/2,.12,380],bow:[-.55,.18,330],top:[-Math.PI/2,1.45,520],under:[-2.0,-.32,300]};
 function updateCamera(dt){
   if(AAG.on){aaCamera(dt);return;} if(pilot.on){pilotCamera(dt);return;} if(gun.cam){gunCamera(dt);return;} if(aimRing.visible&&simT>gun.ringT)aimRing.visible=false; else if(aimRing.visible)aimRing.scale.setScalar(14); camera.up.set(0,1,0);
@@ -1621,7 +1893,7 @@ function syncComps(fillArr,fireArr,smokeArr){ const flick=.35+.25*Math.sin(perfo
   for(const c of ship.comps){ const f=fillArr?fillArr[c.id]/255:c.water/c.vol, fr=fireArr?fireArr[c.id]/255:c.fire; c._f=f;c._fire=fr; c._smoke=smokeArr?smokeArr[c.id]/255:c.smoke; if(!xray)continue; c.smesh.visible=c._smoke>.1&&fr<=.02;
     c.wmesh.visible=f>.004; if(f>.004)c.wmesh.scale.y=Math.max(.05,f*(c.h-.15)); c.fmesh.visible=fr>.02; }
   fireMat.opacity=flick; }
-function setXray(on){ xray=on; for(const m of shipMats){m.transparent=on;m.opacity=on?.13:1;m.depthWrite=!on;m.needsUpdate=true;} for(const S of (FLEET.ships.length?FLEET.ships:[ship])){ for(const c of S.comps)c.obj.visible=on; for(const o of S.mach)o.visible=on; } applySea(); document.getElementById('bXray').setAttribute('aria-pressed',on); }
+function setXray(on){ xray=on; for(const m of shipMats){m.transparent=on;m.opacity=on?.13:1;m.depthWrite=!on;m.needsUpdate=true;} for(const S of (FLEET.ships.length?FLEET.ships:[ship])){ const hide=isFoe(S); for(const c of S.comps)c.obj.visible=on&&!hide; for(const o of S.mach)o.visible=on&&!hide; } applySea(); document.getElementById('bXray').setAttribute('aria-pressed',on); }
 function applySea(){ ocean.visible=sea.visible; oceanMat.opacity=xray?.8:.93; oceanMat.needsUpdate=true; }
 const fogCol=new THREE.Color(), uwCol=new THREE.Color(0x17586b);
 function updateAtmosphere(dtReal,t){
@@ -1844,21 +2116,21 @@ const rail=document.getElementById('rail'), hintText=document.getElementById('hi
 TOOLS.forEach((T,i)=>{ if(i===2||i===6){rail.appendChild(document.createElement('hr'));} const b=document.createElement('button'); b.className='tool'+(T[3]?' harm':''); b.dataset.tool=T[0]; b.setAttribute('aria-pressed',i===0); b.innerHTML='<kbd>'+(i+1)+'</kbd>'+T[1]; b.title=T[2]; b.onclick=()=>setTool(T[0]); rail.appendChild(b);
   if(T[0]==='breach'){const d=document.createElement('div');d.id='breachRow';d.innerHTML='Breach size <span id="oB">1.0 m</span><input id="sB" type="range" min="0.2" max="4" step="0.1" value="1" aria-label="Breach diameter">';rail.appendChild(d);} });
 document.getElementById('sB').oninput=e=>document.getElementById('oB').textContent=(+e.target.value).toFixed(1)+' m';
-function setTool(id){ tool=id; rail.querySelectorAll('.tool').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===id)); hintText.textContent=TOOLS.find(t=>t[0]===id)[2]; canvas.style.cursor=id==='look'?'grab':'crosshair'; if(id==='patch'&&!xray){} }
+function setTool(id){ if(MP.started&&['torpedo','bomb','breach','fire'].includes(id))return; tool=id; rail.querySelectorAll('.tool').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===id)); hintText.textContent=MP.started&&id==='look'?'Drag to orbit, scroll or pinch to zoom. Click an enemy ship to target her, or one of yours to take command.':TOOLS.find(t=>t[0]===id)[2]; canvas.style.cursor=id==='look'?'grab':'crosshair'; if(id==='patch'&&!xray){} }
 let acted=false; function firstAction(){acted=true;}
 const $=id=>document.getElementById(id);
 function setZebra(v){zebra=v;$('bZebra').setAttribute('aria-pressed',zebra);$('bZebra').textContent=zebra?'Doors closed (Zebra)':'Close watertight doors';log(zebra?'Condition Zebra set. Watertight doors and hatches closed.':'Watertight doors opened.');}
-$('bZebra').onclick=()=>setZebra(!zebra);
-$('bAuto').onclick=()=>{ship.dc.auto=!ship.dc.auto;$('bAuto').setAttribute('aria-pressed',ship.dc.auto);log(ship.dc.auto?'Repair parties acting on their own initiative.':'Repair parties standing by for your orders.');};
-$('bAir').onclick=startAir; $('bKam').onclick=()=>{ if(!ship.battle.mode){ snd.alarm(); ship.battle.mode='air'; ship.battle.wavesLeft=0; ship.battle.nextWave=0; ship.battle.kills=0; } spawnWave(0,6,{kam:true,hitBonus:.1}); }; $('bSubm').onclick=startSub; $('bCross').onclick=startCrossing; $('bTorpAtk').onclick=torpedoAttack; $('bDC').onclick=depthCharges; $('bSurf').onclick=startSurface; $('bCease').onclick=()=>ceaseBattle(false);
-$('bCounter').onclick=()=>counterFlood(false);
-$('bAbandon').onclick=()=>orderAbandon(false);
-$('bHold').onclick=()=>{ ship.holdFast=!ship.holdFast; $('bHold').setAttribute('aria-pressed',ship.holdFast); log(ship.holdFast?'Hold fast. The crew will not leave their stations unless you order it.':'The captain may order abandon ship again when she is lost.'); };
+$('bZebra').onclick=()=>{ if(isClient()){ mpCmd('zebra',{v:!zebra}); return; } setZebra(!zebra); };
+$('bAuto').onclick=()=>{ if(isClient()){ mpCmd('auto',{v:!ship.dc.auto}); return; } ship.dc.auto=!ship.dc.auto;$('bAuto').setAttribute('aria-pressed',ship.dc.auto);log(ship.dc.auto?'Repair parties acting on their own initiative.':'Repair parties standing by for your orders.');};
+$('bAir').onclick=startAir; $('bKam').onclick=()=>{ if(!ship.battle.mode){ snd.alarm(); ship.battle.mode='air'; ship.battle.wavesLeft=0; ship.battle.nextWave=0; ship.battle.kills=0; } spawnWave(0,6,{kam:true,hitBonus:.1}); }; $('bSubm').onclick=startSub; $('bCross').onclick=startCrossing; $('bTorpAtk').onclick=()=>isClient()?mpCmd('torp'):torpedoAttack(); $('bDC').onclick=depthCharges; $('bSurf').onclick=startSurface; $('bCease').onclick=()=>ceaseBattle(false);
+$('bCounter').onclick=()=>isClient()?mpCmd('cflood'):counterFlood(false);
+$('bAbandon').onclick=()=>isClient()?mpCmd('abandon'):orderAbandon(false);
+$('bHold').onclick=()=>{ if(isClient()){ mpCmd('hold',{v:!ship.holdFast}); return; } ship.holdFast=!ship.holdFast; $('bHold').setAttribute('aria-pressed',ship.holdFast); log(ship.holdFast?'Hold fast. The crew will not leave their stations unless you order it.':'The captain may order abandon ship again when she is lost.'); };
 $('bSeal').onclick=sealAll; $('bDry').onclick=pumpDry; $('bOut').onclick=firesOut; $('bRefloat').onclick=refloat;
-function setRudder(v){ ship.rudderOrd=clamp(v,-35,35); $('sRud').value=ship.rudderOrd; $('oRud').textContent=ship.rudderOrd===0?'midships':Math.abs(ship.rudderOrd)+'° '+(ship.rudderOrd>0?'stbd':'port'); }
+function setRudder(v){ ship.rudderOrd=clamp(v,-35,35); if(isClient())mpCmd('rud',{v:ship.rudderOrd}); $('sRud').value=ship.rudderOrd; $('oRud').textContent=ship.rudderOrd===0?'midships':Math.abs(ship.rudderOrd)+'° '+(ship.rudderOrd>0?'stbd':'port'); }
 $('sRud').oninput=e=>setRudder(+e.target.value);
 function setTelegraphUI(){ const S0=FLEET.active||ship; $('telRow').querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',Math.abs(+o.dataset.tel-S0.telegraph)<.01)); }
-$('telRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{ if(ship.crew.abandon&&+b.dataset.tel>0){log('No one is left at the throttles.');return;} if(ship.moored){log('She is moored fore and aft with cold boilers. There is no getting under way.');return;} ship.telegraph=+b.dataset.tel; setTelegraphUI(); log('Engine telegraph: '+b.textContent.toLowerCase()+'.'); });
+$('telRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{ if(ship.crew.abandon&&+b.dataset.tel>0){log('No one is left at the throttles.');return;} if(ship.moored){log('She is moored fore and aft with cold boilers. There is no getting under way.');return;} ship.telegraph=+b.dataset.tel; setTelegraphUI(); if(isClient())mpCmd('tel',{v:ship.telegraph}); log('Engine telegraph: '+b.textContent.toLowerCase()+'.'); });
 $('bDet').onclick=()=>{const i=+$('magSel').value; if(!ship.comps.some(c=>c.mag===i)){log('That magazine is already gone.');return;} detonate(i);};
 $('timeRow').querySelectorAll('button').forEach(b=>b.onclick=()=>{timeScale=+b.dataset.ts;$('timeRow').querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',o===b));});
 $('sH').oninput=e=>{sea.targetH=+e.target.value;$('oH').textContent=sea.targetH+' m';};
@@ -1892,7 +2164,7 @@ $('mobPlate').onclick=()=>{const o=$('plate').classList.toggle('open');$('mobPla
 window.addEventListener('keyup',e=>{pilot.keys[e.key.toLowerCase()]=false;});
 const AAKEY={arrowup:'w',arrowdown:'s',arrowleft:'a',arrowright:'d',w:'w',a:'a',s:'s',d:'d',' ':' '};
 window.addEventListener('keyup',e=>{ const k=AAKEY[e.key.toLowerCase()]; if(k)AAG.keys[k]=false; });
-window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return; if(AAG.on){ const k0=e.key.toLowerCase(); if(k0==='escape'){exitAA();return;} const k=AAKEY[k0]; if(k){ AAG.keys[k]=true; e.preventDefault(); if(k===' ')firstAction(); return; } } if(pilot.on){ const k=e.key.toLowerCase(); if(k==='escape'){exitPilot();return;} if(pilot.mode==='in'&&(k==='r'||k==='f')){climb(k==='r'?1:-1);return;} pilot.keys[k]=true; if(k.startsWith('arrow')||k===' ')e.preventDefault(); return; } if(gunKey(e.key,e))return; const n=+e.key; if(n>=1&&n<=9)setTool(TOOLS[n-1][0]); else if(e.key==='x'||e.key==='X')setXray(!xray); else if(e.key==='t'||e.key==='T')cycleLock(); else if(e.key===']'&&FLEET.ships.length>1){ const L=FLEET.ships; commandShip(L[(L.indexOf(FLEET.active)+1)%L.length]); } else if(e.key==='ArrowLeft'){e.preventDefault();setRudder(ship.rudderOrd-5);} else if(e.key==='ArrowRight'){e.preventDefault();setRudder(ship.rudderOrd+5);} else if(e.key===' '){e.preventDefault();const bs=$('timeRow').querySelectorAll('button');(timeScale===0?bs[2]:bs[0]).click();} });
+window.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return; if(AAG.on){ const k0=e.key.toLowerCase(); if(k0==='escape'){exitAA();return;} const k=AAKEY[k0]; if(k){ AAG.keys[k]=true; e.preventDefault(); if(k===' ')firstAction(); return; } } if(pilot.on){ const k=e.key.toLowerCase(); if(k==='escape'){exitPilot();return;} if(pilot.mode==='in'&&(k==='r'||k==='f')){climb(k==='r'?1:-1);return;} pilot.keys[k]=true; if(k.startsWith('arrow')||k===' ')e.preventDefault(); return; } if(gunKey(e.key,e))return; const n=+e.key; if(n>=1&&n<=9)setTool(TOOLS[n-1][0]); else if(e.key==='x'||e.key==='X')setXray(!xray); else if(e.key==='t'||e.key==='T')cycleLock(); else if(e.key===']'&&FLEET.ships.length>1){ const L=MP.started?FLEET.ships.filter(S=>S.owner===MP.me):FLEET.ships; if(L.length>1)commandShip(L[(L.indexOf(FLEET.active)+1)%L.length]); } else if(e.key==='ArrowLeft'){e.preventDefault();setRudder(ship.rudderOrd-5);} else if(e.key==='ArrowRight'){e.preventDefault();setRudder(ship.rudderOrd+5);} else if(e.key===' '){e.preventDefault(); if(MP.started)return; const bs=$('timeRow').querySelectorAll('button');(timeScale===0?bs[2]:bs[0]).click();} });
 function applyShipUI(){ $('shipTitle').textContent=ship.title||CLS.title; $('sub').textContent=CLS.sub; $('crewHead').textContent=CLS.crewWord+' of '+CLS.crew.toLocaleString(); document.title=CLS.name+' damage control simulator';
   const ms=$('magSel'); ms.innerHTML=''; CLS.mags.forEach((m,i)=>{const o=document.createElement('option');o.value=i;o.textContent=m;ms.appendChild(o);}); ms.hidden=!CLS.mags.length; $('bDet').hidden=!CLS.mags.length; $('bBerg').hidden=CLS.id!=='liner';
   $('hBat').hidden=$('rBat').hidden=false; $('bAir').hidden=$('bSurf').hidden=$('bKam').hidden=!CLS.battle; $('bTorpAtk').hidden=$('bDC').hidden=CLS.id!=='fletcher'; $('bAbandon').textContent=CLS.boats?'Lower the boats':'Abandon ship'; setTelegraphUI(); setRudder(ship.rudderOrd); zebraUI(); $('bHold').setAttribute('aria-pressed',!!ship.holdFast); $('bAuto').setAttribute('aria-pressed',ship.dc.auto); $('bAbandon').setAttribute('aria-pressed',ship.crew.abandon); }
@@ -1933,7 +2205,7 @@ pcv.addEventListener('pointermove',e=>{const c=cellAt(e); if(c!==hoverC){hoverC=
 pcv.addEventListener('pointerleave',()=>{hoverC=null;plateDirty=true;});
 pcv.addEventListener('click',e=>{const k=cellAt(e,true); if(!k||replay.on)return; if(k.prof&&!k.single){ if(k.c.lvl<=6){planLvl=k.c.lvl;drawTabs();plateDirty=true;} return; } const c=k.c; firstAction(); if(pilot.on&&pilot.mode==='in'&&c.body.deadT===Infinity&&c.kind!=='tank'){ pilot.c=c; pilot.pos.set(c.xc,0,c.zc); refreshRooms(); select(c); return; } if(['fire','flood','pump','hose'].includes(tool))applyCompTool(c); else select(c);});
 function compLine(c){ const st=[]; if(c._fire>.02)st.push('on fire'); if(c._smoke>.15)st.push('smoke '+Math.round(c._smoke*100)+'%'); if(c.pump)st.push('pump running'); if(c.valve)st.push('sea valve open'); if(c.fighting)st.push('fire party inside'); if(c.mag>=0&&c.cook>1)st.push('detonates in '+Math.max(0,35-c.cook).toFixed(0)+' s');
-  if(c.crew>=.5)st.unshift(Math.round(c.crew)+' crew');
+  if(c.crew>=.5&&!isClient())st.unshift(Math.round(c.crew)+' crew');
   return c.name+'. '+Math.round(c.vol)+' m³, '+Math.round((c._f||0)*100)+'% flooded'+(st.length?', '+st.join(', '):'')+'.'; }
 
 // gauges
@@ -1959,13 +2231,13 @@ function updateUI(){
   let w=0,fires=0,pumps=0; for(const c of ship.comps){w+=(c._f||0)*c.vol; if(c._fire>.02)fires++; if(c.pump)pumps++;} const tons=w*1.025, reserve=(ship.totalVol*RHO-ship.mass0)/1000;
   $('nFlood').textContent=Math.round(tons).toLocaleString()+' t'; $('nRes').textContent=Math.max(0,Math.round((1-tons/reserve)*100))+'%'; $('nFire').textContent=fires; $('nPump').textContent=pumps;
   const ct=crewTotals(); $('nAb').textContent=Math.round(ct.aboard).toLocaleString(); $('nWa').textContent=Math.round(ct.water).toLocaleString(); $('nSafe').textContent=Math.round(ct.safe).toLocaleString(); $('nDead').textContent=Math.round(ct.dead).toLocaleString();
-  $('nTeams').textContent=ct.teams+'/'+CLS.teams; const gm=gunsManned(); $('nGuns').textContent=gm.mb+' main, '+gm.aa+' AA'; const BT=ship.battle; $('battleInfo').textContent=(BT.mode==='air'?BT.planes.length+' aircraft up, '+BT.kills+' shot down. ':'')+(BT.enemy?'enemy at '+Math.max(0,Math.round(BT.enemy.hp))+'%. ':'')+(BT.sub?'submarine '+(BT.sub.hp<=0?'sunk':BT.sub.peri?'at periscope depth':'deep')+'. ':'')+(BT.torps.length?BT.torps.length+' torpedoes running.':'');
+  $('nTeams').textContent=ct.teams+'/'+CLS.teams; const gm=gunsManned(); $('nGuns').textContent=gm.mb+' main, '+gm.aa+' AA'; const BT=ship.battle; $('battleInfo').textContent=MP.started?mpBattleInfo():(BT.mode==='air'?BT.planes.length+' aircraft up, '+BT.kills+' shot down. ':'')+(BT.enemy?'enemy at '+Math.max(0,Math.round(BT.enemy.hp))+'%. ':'')+(BT.sub?'submarine '+(BT.sub.hp<=0?'sunk':BT.sub.peri?'at periscope depth':'deep')+'. ':'')+(BT.torps.length?BT.torps.length+' torpedoes running.':'');
   $('nPower').textContent=Math.round(ship.power*100)+'%'; $('nRud').textContent=Math.abs(ship.rudder).toFixed(0)+'°'+(ship.steerOK?'':' jammed');
   $('engInfo').textContent=(ship.speed*1.944).toFixed(0)+' kn, '+(ship.running||0)+' of '+ship.shafts.length+' shafts';
   { let fsum=0; for(const c of ship.comps)fsum+=c._fire||0; const wNow=tons, rate=Math.max(0,(wNow-(ship.lastTons||0))/.15/Math.max(.2,timeScale||1)); ship.lastTons=wNow; snd.update({inside:pilot.on&&pilot.mode==='in',sea:sea.H,fire:fsum,flood:rate,speed:ship.speed,planes:ship.battle.planes.length,under:pilot.on&&pilot.mode==='in'?pilot.wet:camera.position.y<waveY(camera.position.x,camera.position.z,simT),near:pilot.on?1:1/(1+cam.dist/500),quiet:timeScale===0&&!replay.on}); }
   const st=$('status'); const allDown=L.every(x=>x.resting||x.p.y<-60), going=L.some(x=>x.sub>.97&&!x.resting); let txt,cl='';
   if(allDown&&!L.every(x=>x.resting)){txt='Gone from the surface. The wreck is passing '+Math.round(-Math.max(...L.filter(x=>!x.resting).map(x=>x.p.y))).toLocaleString()+' m.';cl='bad';}
-  else if(allDown){txt='Sunk. The wreck lies in '+(-SEABED).toLocaleString()+' m of water.';cl='bad'; if(!ship.sunkLogged&&L.every(x=>x.resting)){ship.sunkLogged=true;log('The wreck settles on the seabed.');}}
+  else if(allDown){txt='Sunk. The wreck lies in '+(-SEABED).toLocaleString()+' m of water.';cl='bad'; if(!ship.sunkLogged&&L.every(x=>x.resting)){ship.sunkLogged=true; if(!isClient())log('The wreck settles on the seabed.');}}
   else if(going){txt='Going down';cl='bad';} else if(Math.abs(list)>15||tons/reserve>.6){txt='Foundering';cl='bad';} else if(tons>400||fires){txt=fires?'Damaged and burning':'Damaged, taking water';cl='warn';} else txt='Afloat and watertight';
   st.textContent=txt; st.className=cl; zebraUI(); $('bAbandon').setAttribute('aria-pressed',ship.crew.abandon); updateFleetRows(); if(selected)$('compInfo').textContent=compLine(selected); else if(hoverC)$('compInfo').textContent=compLine(hoverC);
 }
@@ -1993,17 +2265,17 @@ function frame(now){
   const dtReal=Math.min(.05,(now-last)/1000); last=now; let viewT=simT;
   if(Math.abs(sea.H-sea.targetH)>.001){sea.H=lerp(sea.H,sea.targetH,1-Math.exp(-dtReal*.8)); paintSky(clamp((sea.H-2.5)/5,0,1));}
   if(replay.on){ viewT=replayTick(dtReal); }
-  else { if(timeScale>0){simulate(dtReal*timeScale); recordAll(now/1000);} for(const S of FLEET.ships){ useShip(S); for(const b of S.bodies)if(b.deadT===Infinity)b.sync(); syncComps(); } useShip(FLEET.active); }
+  else { if(isClient())mpClientTick(dtReal); else if(timeScale>0){simulate(dtReal*timeScale); if(!MP.started)recordAll(now/1000);} for(const S of FLEET.ships){ useShip(S); for(const b of S.bodies)if(b.deadT===Infinity)b.sync(); syncComps(); } useShip(FLEET.active); if(MP.started&&MP.role==='host'&&MP.net)mpHostTick(dtReal); }
   const dtFx=replay.on?(replay.playing?dtReal*clamp(replay.speed,.25,2):0):dtReal*clamp(timeScale,0,2);
   if(!replay.on){fxVX=frameVX;fxVZ=frameVZ;} for(const S of FLEET.ships){ const sp=replay.on?(S._spd||0):S.speed; for(const sh of S.shafts)sh.prop.rotation.x+=sh.dir*dtFx*((sh.running||replay.on)?sp*.75:0); for(const r of S.rudders)if(!r.userData.gone)r.rotation.y=S.rudder*Math.PI/180; }
-  if(!replay.on)drawCrew(true); else {battleGroup.visible=false;} for(const S of FLEET.ships){ useShip(S); emitEffects(dtFx,viewT); } useShip(FLEET.active); fxUpdate(dtFx); updateCamera(dtReal); updateOcean(viewT,cam.target.x,cam.target.z); sky.position.copy(camera.position); updateAtmosphere(dtReal,viewT);
+  if(isClient())mpDrawCrew(); else if(!replay.on)drawCrew(true); else {battleGroup.visible=false;} if(MP.started)mpSideRings(); updateLockRing(); for(const S of FLEET.ships){ useShip(S); emitEffects(dtFx,viewT); } useShip(FLEET.active); fxUpdate(dtFx); updateCamera(dtReal); updateOcean(viewT,cam.target.x,cam.target.z); sky.position.copy(camera.position); updateAtmosphere(dtReal,viewT);
   renderer.render(scene,camera);
   uiClock+=dtReal; if(uiClock>.15){uiClock=0;updateUI();coachTick();plateDirty=true;} if(plateDirty){plateDirty=false;drawPlate();}
   requestAnimationFrame(frame);
 }
 buildWaves(); paintSky(0); buildShip(); fleetInit(); drawTabs(); setTool('look'); hintText.textContent='Pick a tool, then click the ship. Drag to look around.'; resize(); applySea();
-drawSaves(); initSharing(); try{ if(!localStorage.getItem('dc-tut'))setTimeout(coachStart,900); }catch(e){} log('USS Iowa under way, '+ship.comps.length+' watertight compartments manned and ready.');
-window.__sim={FLEET,addFleetShip,removeFleetShip,commandShip,useShip,mbOf,get frameVX(){return frameVX;},get camera(){return camera;},AAG,armAA,exitAA,pickAAMount,stepAA,setLock,cycleLock,sealAll,pumpDry,firesOut,refloat,orderAbandon,fireSalvo,setGunCam,gun,gunAim,kamCrash,spawnWave,launchTorpedo,startSub,startCrossing,torpedoAttack,depthCharges,leadDir,makeSave,loadSave,pilot,enterPilot,exitPilot,tourNext,get berg(){return berg;},halfB,setShip,startScenario,get scn(){return ship.scn;},blowOff,V3,set follow(v){follow=v;},get ship(){return ship;},simulate,torpedoHit,detonate,splitBody,get t(){return simT;},setXray,liveBodies,cam,setTool,counterFlood};
+drawSaves(); initSharing(); const roomQ=new URLSearchParams(location.search).get('room'); try{ if(!roomQ&&!localStorage.getItem('dc-tut'))setTimeout(coachStart,900); }catch(e){} mpInitUI(roomQ); log('USS Iowa under way, '+ship.comps.length+' watertight compartments manned and ready.');
+window.__sim={FLEET,addFleetShip,removeFleetShip,commandShip,useShip,mbOf,get frameVX(){return frameVX;},get camera(){return camera;},AAG,armAA,exitAA,pickAAMount,stepAA,setLock,cycleLock,sealAll,pumpDry,firesOut,refloat,orderAbandon,fireSalvo,setGunCam,gun,gunAim,kamCrash,spawnWave,launchTorpedo,startSub,startCrossing,torpedoAttack,depthCharges,leadDir,makeSave,loadSave,pilot,enterPilot,exitPilot,tourNext,get berg(){return berg;},halfB,setShip,startScenario,get scn(){return ship.scn;},blowOff,V3,set follow(v){follow=v;},get ship(){return ship;},simulate,torpedoHit,detonate,splitBody,get t(){return simT;},setXray,liveBodies,cam,setTool,counterFlood,MP,mpHost,mpJoin,mpLeave,mpStart,mpPick,mpBackToLobby,mpSnap,mpApply,mpCheck,shellVsShips,shellSweep,isClient,targetsList,tgtValid,foeShips,nearestFoeTgt,fireLive,gunsManned,crewTotals,mainBody,turretManned,applyCompTool,select,get timeScale(){return timeScale;},set timeScale(v){timeScale=v;}};
 requestAnimationFrame(frame);
 })();
 </script>
