@@ -7,7 +7,14 @@ each with real watertight compartments, flooding, fire, crew, repair parties, en
 Historical scenarios, air raids, surface actions, submarines, kamikazes, fleets of up to three ships,
 manual gunnery and anti-aircraft guns, a carrier air group you can command or fly yourself
 (Hellcats, Helldivers and Avengers), replays and saved games. Weather, night battles, detailed ships,
-fire, smoke and explosion effects, and a full soundscape with spoken damage reports.
+fire, smoke and explosion effects, and a full soundscape (spoken damage reports are optional and off by default).
+
+Every gun trains and elevates: the main battery lifts to the range it is firing at, and each shot throws out a
+muzzle blast that flattens and sprays the sea. Anti-aircraft mounts track and lead incoming aircraft on their own,
+with crews at the light guns. The sea has wind ripples, whitecaps in heavy weather, bow waves and wakes, and a
+ship going down leaves a boiling whirl of foam and wreckage floating back up.
+
+Splash sounds: "Big Splash" by Bird_man and "Water splash" by speedygonzo on Freesound, both CC0 (public domain).
 
 ## Multiplayer (PvP)
 
