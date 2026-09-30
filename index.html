@@ -2797,11 +2797,11 @@ function shockFront(pos,ax,k){ if(!ax)return; const s=shockPool[shockN=(shockN+1
 function stepShock(dt){ for(const s of shockPool){ if(!s.m.visible)continue; s.t+=dt; const k=s.t/s.T; if(k>=1){ s.m.visible=false; continue; } s.m.position.x-=fxVX*dt; s.m.position.z-=fxVZ*dt; s.m.position.addScaledVector(s.v,dt*(1-k)); s.m.scale.setScalar(Math.max(.1,s.R*(.12+.88*(1-Math.pow(1-k,3))))); s.m.material.uniforms.uA.value=(1-k)*(1-k)*.6*(night?.45:1); } }
 
 /* ---------- the sea surface: wind ripples, glints, whitecaps, bow waves and wakes, the swirl where a ship went down ---------- */
-const OCU={uT:{value:0},uSea:{value:1},uDrift:{value:new THREE.Vector2()},uSky:{value:new THREE.Color()},uFoamL:{value:1},uShN:{value:0},uShA:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShB:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShC:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShD:{value:[...Array(10)].map(()=>new THREE.Vector4())},uVxN:{value:0},uVx:{value:[...Array(6)].map(()=>new THREE.Vector4())}};
+const OCU={uT:{value:0},uSea:{value:1},uDrift:{value:new THREE.Vector2()},uSky:{value:new THREE.Color()},uFoamL:{value:1},uShN:{value:0},uShA:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShB:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShC:{value:[...Array(10)].map(()=>new THREE.Vector4())},uShD:{value:[...Array(10)].map(()=>new THREE.Vector4())},uTrN:{value:0},uTr:{value:[...Array(48)].map(()=>new THREE.Vector4())},uTrI:{value:[...Array(4)].map(()=>new THREE.Vector4())},uTrB:{value:[...Array(4)].map(()=>new THREE.Vector4())},uVxN:{value:0},uVx:{value:[...Array(6)].map(()=>new THREE.Vector4())}};
 oceanMat.onBeforeCompile=function(sh){ Object.assign(sh.uniforms,OCU);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;').replace('#include <fog_vertex>','#include <fog_vertex>\nvWP=(modelMatrix*vec4(transformed,1.)).xyz;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uT,uSea,uFoamL; uniform vec2 uDrift; uniform vec3 uSky; uniform int uShN,uVxN; uniform vec4 uShA[10],uShB[10],uShC[10],uShD[10],uVx[6]; varying vec3 vWP;
+uniform float uT,uSea,uFoamL; uniform vec2 uDrift; uniform vec3 uSky; uniform int uShN,uVxN,uTrN; uniform vec4 uShA[10],uShB[10],uShC[10],uShD[10],uVx[6],uTr[48],uTrI[4],uTrB[4]; varying vec3 vWP;
 float oh(vec2 p){ vec3 p3=fract(vec3(p.xyx)*.1031); p3+=dot(p3,p3.yzx+33.33); return fract((p3.x+p3.y)*p3.z); }
 float on(vec2 p){ vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f); return mix(mix(oh(i),oh(i+vec2(1.,0.)),u.x),mix(oh(i+vec2(0.,1.)),oh(i+vec2(1.,1.)),u.x),u.y); }
 float ofbm(vec2 p){ float a=.5,s=0.; for(int i=0;i<4;i++){ s+=a*on(p); p=p*2.03+vec2(1.7,9.2); a*=.5; } return s; }
@@ -2823,18 +2823,43 @@ vec2 ripG(vec2 p,float t,float vd){ float f1=1.-smoothstep(400.,2600.,vd),f2=1.-
     if(u>X.y+60.||u<X.x-2800.||av>1000.)continue;
     float s=clamp(u/L,-1.,1.),pf=s>=F.x?max(.03,1.-pow((s-F.x)/(1.-F.x),F.y)):(s<F.z?1.-F.w*pow((F.z-s)/(1.+F.z),X.z):1.),hw=W*pf+.3,sp=clamp(spd/12.,0.,1.),e=av-hw,fh=0.,fw=0.,fk=0.,fs=0.;
     if(u>X.x-4.&&u<X.y+4.){ float band=(1.+5.*sp)*(.5+.9*clamp(s+.25,0.,1.)); fh=(1.-smoothstep(0.,band,e))*step(-1.5,e)*(.16+.7*sp); }
-    if(u<X.x+L*.15&&spd>.3){ float dd=max(0.,X.x+L*.15-u),w=W*.8+dd*.075; fw=(1.-smoothstep(w*.4,w,av))*exp(-dd/(70.+spd*48.))*min(1.,sp*1.6)*.85; }
-    if(u<X.y&&spd>1.5){ float dd=X.y-u,arm=abs(av-dd*.354),wd=1.4+dd*.013; fk=(1.-smoothstep(0.,wd,arm))*exp(-dd/(170.+spd*32.))*sp*.5; }
+    if(u<X.x+L*.15&&spd>.3&&(X.w<.5||u>X.x-2.)){ float dd=max(0.,X.x+L*.15-u),w=W*.8+dd*.075; fw=(1.-smoothstep(w*.4,w,av))*exp(-dd/(70.+spd*48.))*min(1.,sp*1.6)*.85; }
+    if(u<X.y&&spd>1.5&&(X.w<.5||u>X.x)){ float dd=X.y-u,arm=abs(av-dd*.354),wd=1.4+dd*.013; fk=(1.-smoothstep(0.,wd,arm))*exp(-dd/(170.+spd*32.))*sp*.5; }
     if(sk>0.)fs=sk*(1.-smoothstep(0.,16.,e))*step(-2.,e)*step(X.x-14.,u)*step(u,X.y+14.);
     if(fh+fw+fk+fs>.002){ float nz=ofbm(mat2(.8,-.6,.6,.8)*vWP.xz*.16+vec2(uT*.5,0.))*1.15-.07; foam+=fh*smoothstep(.22,.58,nz+.25*sp)+fw*smoothstep(.3,.66,nz)+fk*smoothstep(.4,.72,nz)*smoothstep(.25,.6,on(vWP.xz*.05+uT*.1))+fs*smoothstep(.2,.55,nz); } }
+  /* the wake laid down in the water: it curves where the ship turned and stays where she left it */
+  for(int k=0;k<4;k++){ if(k>=uTrN)break; vec4 I=uTrI[k],Bb=uTrB[k]; if(vWP.x<Bb.x||vWP.x>Bb.z||vWP.z<Bb.y||vWP.z>Bb.w)continue;
+    float len=I.y,W=I.z,spd=I.w,sp=clamp(spd/12.,0.,1.),fw=0.,fk=0.;
+    for(int i=0;i<11;i++){ if(float(i+1)>=I.x)break; vec4 P=uTr[k*12+i],Q=uTr[k*12+i+1]; vec2 ba=Q.xy-P.xy; float bl=dot(ba,ba); if(bl<1e-3)continue;
+      vec2 pa=vWP.xz-P.xy; float h=clamp(dot(pa,ba)/bl,0.,1.),age=mix(P.z,Q.z,h),tf=mix(P.w,Q.w,h),dist=length(pa-ba*h),w=W*.8+age*.075;
+      if(dist<w)fw=max(fw,(1.-smoothstep(w*.4,w,dist))*exp(-age/(70.+spd*48.))*tf);
+      if(spd>1.5){ vec2 nn=vec2(-ba.y,ba.x)/sqrt(bl); float oP=.354*(P.z+len),oQ=.354*(Q.z+len),ag=age+len,wd=1.4+ag*.013;
+        for(int sd=0;sd<2;sd++){ float sg=sd==0?1.:-1.; vec2 A2=P.xy+nn*oP*sg,ab=Q.xy+nn*oQ*sg-A2,pb=vWP.xz-A2; float h2=clamp(dot(pb,ab)/max(dot(ab,ab),1e-3),0.,1.),d2=length(pb-ab*h2); if(d2<wd)fk=max(fk,(1.-smoothstep(0.,wd,d2))*exp(-ag/(170.+spd*32.))*mix(P.w,Q.w,h2)); } } }
+    fw*=min(1.,sp*1.6)*.85; fk*=sp*.5;
+    if(fw+fk>.002){ float nz=ofbm(mat2(.8,-.6,.6,.8)*vWP.xz*.16+vec2(uT*.5,0.))*1.15-.07; foam+=fw*smoothstep(.3,.66,nz)+fk*smoothstep(.4,.72,nz)*smoothstep(.25,.6,on(vWP.xz*.05+uT*.1)); } }
   for(int i=0;i<6;i++){ if(i>=uVxN)break; vec4 X=uVx[i]; vec2 d=vWP.xz-X.xy; float r=length(d); if(r>X.z*1.4)continue; float k=1.-smoothstep(X.z*.15,X.z*1.4,r),a=atan(d.y,d.x),sw=sin(a*3.+r*.085-uT*1.6+on(d*.05)*4.);
     foam+=X.w*k*.8*smoothstep(.2,.9,sw*.5+.5+.35*(on(vWP.xz*.28+uT*.5)-.5)); diffuseColor.rgb*=1.-.4*X.w*exp(-r*r/(X.z*X.z*.12)); }
   foam=clamp(foam,0.,1.);`)
    .replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',`{ float fres=.03+.97*pow(1.-clamp(dot(normalize(normal),normalize(vViewPosition)),0.,1.),5.); outgoingLight=mix(outgoingLight,uSky,fres*.55); outgoingLight=mix(outgoingLight,vec3(.88,.93,.95)*uFoamL,foam*.9); }
   gl_FragColor=vec4(outgoingLight,max(diffuseColor.a,foam*.97));`); };
 oceanMat.needsUpdate=true;
-function oceanUniforms(t){ OCU.uT.value=t; OCU.uSea.value=sea.H; OCU.uDrift.value.set(driftX||0,driftZ||0); if(scene.fog)OCU.uSky.value.copy(scene.fog.color); OCU.uFoamL.value=night?.26:1-.45*wxStorm();
-  let n=0; for(const S of FLEET.ships){ const cl=CLASSES[S.cls],L0=S.bodies.filter(x=>x.deadT===Infinity); for(const b of L0){ if(n>=10)break; if(!b.group.visible||b.resting||b.p.y<-80)continue; const e=b.e,l=Math.hypot(e[0],e[2])||1,F=cl.form; b.group.localToWorld(tmpV.set(0,0,0)); OCU.uShC.value[n].set(F.bow0,F.bowP,F.st0,F.stK); OCU.uShD.value[n].set(b.xa,b.xb,F.stP,0);
+/* each ship lays a trail of points behind her stern, fixed in the water, every 45 m */
+const TRL=12, TRSP=45;
+function stepTrails(dS,t){ for(const S of FLEET.ships){ const T=S._trail||(S._trail=[]); if(dS>0&&!replay.on)for(const p of T){ p.x-=fxVX*dS; p.z-=fxVZ*dS; }
+    const L0=S.bodies.filter(b=>b.deadT===Infinity),b=L0.length===1?L0[0]:null,sp=replay.on?(S._spd||0):S.speed;
+    if(b&&!b.resting&&b.sub<.9&&!replay.on&&sp>.3){ b.group.localToWorld(tmpV.set(b.xa,0,0));
+      if(!T.length||Math.hypot(tmpV.x-T[0].x,tmpV.z-T[0].z)>150){ T.length=0; T.push({x:tmpV.x,z:tmpV.z,s:0,t},{x:tmpV.x,z:tmpV.z,s:0,t}); S._trS=0; }
+      const h=T[0],d=Math.hypot(tmpV.x-h.x,tmpV.z-h.z); S._trS=(S._trS||0)+d; h.x=tmpV.x; h.z=tmpV.z; h.s=S._trS; h.t=t;
+      if(h.s-T[1].s>TRSP){ T.splice(1,0,{x:h.x,z:h.z,s:h.s,t}); if(T.length>TRL)T.pop(); } }
+    while(T.length&&t-T[T.length-1].t>300)T.pop(); if(T.length===1)T.length=0; } }
+function oceanUniforms(t){ const dS=clamp(t-(oceanUniforms.lt==null?t:oceanUniforms.lt),0,3); oceanUniforms.lt=t; stepTrails(dS,t);
+  const TS=FLEET.ships.filter(S=>S._trail&&S._trail.length>1&&S.bodies.some(b=>b.group.visible)).sort((a,b)=>Math.hypot(a._trail[0].x-camera.position.x,a._trail[0].z-camera.position.z)-Math.hypot(b._trail[0].x-camera.position.x,b._trail[0].z-camera.position.z)).slice(0,4);
+  TS.forEach((S,k)=>{ const T=S._trail,n=T.length,cl=CLASSES[S.cls],s0=T[0].s,sp=replay.on?(S._spd||0):S.speed,len=(S.bodies.find(b=>b.deadT===Infinity)||S.bodies[0]); const L2=len?len.xb-len.xa:cl.LH*2; let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;
+    for(let i=0;i<TRL;i++){ const p=T[Math.min(i,n-1)],tf=Math.exp(-(t-p.t)/110)*Math.min(1,(n-1-i)/2.5); OCU.uTr.value[k*TRL+i].set(p.x,p.z,s0-p.s,Math.max(0,tf)); x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); }
+    const pad=.354*(s0-T[n-1].s+L2)+cl.HB+30; OCU.uTrI.value[k].set(n,L2,cl.HB,sp); OCU.uTrB.value[k].set(x0-pad,z0-pad,x1+pad,z1+pad); S._trUp=true; });
+  for(const S of FLEET.ships)if(!TS.includes(S))S._trUp=false; OCU.uTrN.value=TS.length;
+  OCU.uT.value=t; OCU.uSea.value=sea.H; OCU.uDrift.value.set(driftX||0,driftZ||0); if(scene.fog)OCU.uSky.value.copy(scene.fog.color); OCU.uFoamL.value=night?.26:1-.45*wxStorm();
+  let n=0; for(const S of FLEET.ships){ const cl=CLASSES[S.cls],L0=S.bodies.filter(x=>x.deadT===Infinity); for(const b of L0){ if(n>=10)break; if(!b.group.visible||b.resting||b.p.y<-80)continue; const e=b.e,l=Math.hypot(e[0],e[2])||1,F=cl.form; b.group.localToWorld(tmpV.set(0,0,0)); OCU.uShC.value[n].set(F.bow0,F.bowP,F.st0,F.stK); OCU.uShD.value[n].set(b.xa,b.xb,F.stP,S._trUp?1:0);
       const sp=L0.length===1?(replay.on?(S._spd||0):S.speed):0, sk=clamp((b.sub-.84)/.12,0,1); OCU.uShA.value[n].set(tmpV.x,tmpV.z,e[0]/l,e[2]/l); OCU.uShB.value[n].set(cl.LH,cl.HB,sp,sk); n++; } }
   OCU.uShN.value=n; let v=0; for(const V of VORT){ if(v>=6)break; if(V.str<.02)continue; OCU.uVx.value[v++].set(V.x,V.z,V.R,Math.min(1,V.str)); } OCU.uVxN.value=v; }
 
