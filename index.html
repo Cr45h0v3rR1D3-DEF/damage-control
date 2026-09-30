@@ -45,7 +45,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 #breachRow input{width:100%}
 
 /* side */
-#side{position:absolute;right:8px;top:8px;width:268px;max-height:calc(100% - 16px);overflow:auto;padding:10px 12px 12px}
+#bPanels{position:absolute;right:8px;bottom:8px;z-index:6;box-shadow:0 1px 4px rgba(0,0,0,.25)}
+body.nopanels #rail,body.nopanels #side,body.nopanels #plate,body.nopanels #hint,body.nopanels #mobBar,body.nopanels #coach{display:none!important}
+#side{position:absolute;right:8px;top:8px;width:268px;max-height:calc(100% - 52px);overflow:auto;padding:10px 12px 12px}
 h1{font-family:"Big Shoulders Stencil Display",Impact,"Arial Narrow",sans-serif;font-weight:700;font-size:30px;line-height:1;margin:0;letter-spacing:.02em}
 #sub{color:var(--ink-soft);margin:2px 0 8px;font-size:14px}
 #status{font-weight:600;font-size:16px;padding:5px 8px;border-left:4px solid var(--flood);background:var(--well);margin-bottom:8px}
@@ -108,6 +110,7 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
 
 @media (max-width: 860px){
   #mobBar{display:flex;position:absolute;top:6px;right:6px;gap:4px;z-index:5}
+#bPanels{top:44px;bottom:auto;right:6px}
   #side{display:none;top:44px;right:6px;width:min(300px,calc(100% - 12px));max-height:calc(100% - 150px);z-index:4}
   #side.open{display:block}
   #rail{flex-direction:row;left:6px;right:6px;top:auto;bottom:6px;width:auto;overflow-x:auto;max-height:none}
@@ -136,7 +139,8 @@ body.replaying #plate{display:none} body.replaying #replayBar{display:flex}
   <div id="mpBanner" hidden></div>
   <div id="hint"><span id="hintText">Pick a tool, then click the ship. Drag to look around.</span></div>
 
-  <nav id="rail" class="panel" aria-label="Tools"></nav>
+  <button class="btn" id="bPanels" aria-pressed="false" title="Hide the panels to see only the 3D view (H)">Hide panels</button>
+<nav id="rail" class="panel" aria-label="Tools"></nav>
 
   <div id="mobBar">
     <button class="btn" id="mobPlate" aria-pressed="false">Plate</button>
@@ -2120,10 +2124,11 @@ const stressGeo=new THREE.PlaneGeometry(1,1);
 function updateStressVis(){ for(const cn of ship.conns){ const show=xray&&cn.rupt<=0&&(cn.stress>.15||cn.shored); if(!show){ if(cn.vis)cn.vis.visible=false; continue; }
     if(!cn.vis){ const m=new THREE.Mesh(stressGeo,new THREE.MeshBasicMaterial({transparent:true,opacity:.55,depthTest:false,depthWrite:false,side:THREE.DoubleSide})); m.renderOrder=7; m.scale.set(Math.max(1,cn.fw-.4),Math.max(1,cn.fh-.4),1); if(cn.axis==='x')m.rotation.y=Math.PI/2; else if(cn.axis==='y')m.rotation.x=Math.PI/2; m.position.set(cn.pos.x,cn.axis==='y'?cn.pos.y:cn.yb+cn.fh/2,cn.pos.z); cn.vis=m; }
     if(cn.vis.parent!==cn.a.body.group)cn.a.body.group.add(cn.vis); cn.vis.visible=true; cn.vis.material.color.setHex(cn.shored&&cn.stress<.5?0x4fd08a:0xffd23a).lerp(cTmp.setHex(0xff2a1a),clamp((cn.stress-.3)/.7,0,1)); } }
+function looseFitting(p){ const u=p.userData; if(u.heavy||u.box||u.fixed||ship.mach.includes(p)||ship.turrets.some(t=>t.g===p)||!u.bb)return false; if(/turret|funnel|deckhouse|bridge|tower|flight deck|island|hangar|gun mount|superstructure|lifeboat|conning/.test(u.label||''))return false; const z=u.bb.getSize(new V3()); return z.x*z.y*z.z<90; }
 function checkBreaks(){ updateStressVis();
   for(const b of liveBodies())for(const p of b.parts){ const bx=p.userData.box; if(!bx||p.userData.charred)continue; for(const c of b.comps)if(c.sup&&c.fire>.6&&c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ if(MP.rec)mpEv({e:'ch',s:ship.idx,pid:p.userData.pid}); p.userData.charred=true; p.material=M.char; break; } }
-  for(const b of liveBodies()){ if(b.dumped||b.resting)continue; const sev=Math.max((Math.abs(b.list)-58)/45,(Math.abs(b.trim)-24)/30); if(sev<=0)continue; b.cache(); const dn=new V3(0,-1,0).addScaledVector(tmpV.set(b.e[4],b.e[5],b.e[6]),b.e[5]); if(dn.lengthSq()>1e-4)dn.normalize();
-    for(const p of b.parts.slice()){ if(ship.mach.includes(p)||p.userData.fixed||p.position.y<=DECK0-1)continue; if(Math.random()<Math.min(.5,sev)*(p.userData.heavy?.05:.14)){ const v=b.v.clone().addScaledVector(dn,rnd(2,6)).add(tmpV2.set(rnd(-1,1),rnd(0,1.5),rnd(-1,1))); blowOff(p,b,v,new V3(rnd(-.5,.5),rnd(-.2,.2),rnd(-.5,.5))); } } }
+  for(const b of liveBodies()){ if(b.dumped||b.resting)continue; const sev=Math.max((Math.abs(b.list)-65)/40,(Math.abs(b.trim)-30)/30); if(sev<=0)continue; b.cache(); const dn=new V3(0,-1,0).addScaledVector(tmpV.set(b.e[4],b.e[5],b.e[6]),b.e[5]); if(dn.lengthSq()>1e-4)dn.normalize();
+    for(const p of b.parts.slice()){ if(p.position.y<=DECK0-1||!looseFitting(p))continue; if(Math.random()<Math.min(.5,sev)*.1){ const v=b.v.clone().addScaledVector(dn,rnd(2,5)).add(tmpV2.set(rnd(-1,1),rnd(0,1.5),rnd(-1,1))); blowOff(p,b,v,new V3(rnd(-.5,.5),rnd(-.2,.2),rnd(-.5,.5))); } } }
   for(const b of liveBodies())if(Math.abs(b.list)>105&&!b.dumped){ b.dumped=true; let n=0; for(const p of b.parts.slice())if(!ship.mach.includes(p)&&!p.userData.fixed&&p.position.y>DECK0&&(p.userData.heavy||Math.random()<.5)){blowOff(p,b,b.v.clone(),new V3(rnd(-.3,.3),0,rnd(-.3,.3)));n++;} if(n)log('The ship rolls over. Turrets slide from their barbettes and the upperworks tear away.'); }
   for(let i=0;i<SECS.length;i++){ if(ship.secBroken[i])continue; const d=ship.secDamage[i]; if(d<1)continue; const x=(SECS[i][1]+SECS[i][2])/2;
     const b=liveBodies().find(b=>x>b.xa&&x<b.xb); if(!b)continue; if(d>=1.4||(d>=1&&Math.abs(b.trim)>6)){ ship.secBroken[i]=true; splitBody(b,Math.abs(SECS[i][1])<Math.abs(SECS[i][2])?SECS[i][1]:SECS[i][2]);} }
@@ -2847,7 +2852,7 @@ oceanMat.needsUpdate=true;
 const TRL=12, TRSP=45;
 function stepTrails(dS,t){ for(const S of FLEET.ships){ const T=S._trail||(S._trail=[]); if(dS>0&&!replay.on)for(const p of T){ p.x-=fxVX*dS; p.z-=fxVZ*dS; }
     const L0=S.bodies.filter(b=>b.deadT===Infinity),b=L0.length===1?L0[0]:null,sp=replay.on?(S._spd||0):S.speed;
-    if(b&&!b.resting&&b.sub<.9&&!replay.on&&sp>.3){ b.group.localToWorld(tmpV.set(b.xa,0,0));
+    if(b&&!b.resting&&b.sub<.85&&Math.abs(b.list)<25&&!replay.on&&sp>.3){ S._trSp=sp; b.group.localToWorld(tmpV.set(b.xa,0,0));
       if(!T.length||Math.hypot(tmpV.x-T[0].x,tmpV.z-T[0].z)>150){ T.length=0; T.push({x:tmpV.x,z:tmpV.z,s:0,t},{x:tmpV.x,z:tmpV.z,s:0,t}); S._trS=0; }
       const h=T[0],d=Math.hypot(tmpV.x-h.x,tmpV.z-h.z); S._trS=(S._trS||0)+d; h.x=tmpV.x; h.z=tmpV.z; h.s=S._trS; h.t=t;
       if(h.s-T[1].s>TRSP){ T.splice(1,0,{x:h.x,z:h.z,s:h.s,t}); if(T.length>TRL)T.pop(); } }
@@ -2856,11 +2861,11 @@ function oceanUniforms(t){ const dS=clamp(t-(oceanUniforms.lt==null?t:oceanUnifo
   const TS=FLEET.ships.filter(S=>S._trail&&S._trail.length>1&&S.bodies.some(b=>b.group.visible)).sort((a,b)=>Math.hypot(a._trail[0].x-camera.position.x,a._trail[0].z-camera.position.z)-Math.hypot(b._trail[0].x-camera.position.x,b._trail[0].z-camera.position.z)).slice(0,4);
   TS.forEach((S,k)=>{ const T=S._trail,n=T.length,cl=CLASSES[S.cls],s0=T[0].s,sp=replay.on?(S._spd||0):S.speed,len=(S.bodies.find(b=>b.deadT===Infinity)||S.bodies[0]); const L2=len?len.xb-len.xa:cl.LH*2; let x0=1e9,z0=1e9,x1=-1e9,z1=-1e9;
     for(let i=0;i<TRL;i++){ const p=T[Math.min(i,n-1)],tf=Math.exp(-(t-p.t)/110)*Math.min(1,(n-1-i)/2.5); OCU.uTr.value[k*TRL+i].set(p.x,p.z,s0-p.s,Math.max(0,tf)); x0=Math.min(x0,p.x); x1=Math.max(x1,p.x); z0=Math.min(z0,p.z); z1=Math.max(z1,p.z); }
-    const pad=.354*(s0-T[n-1].s+L2)+cl.HB+30; OCU.uTrI.value[k].set(n,L2,cl.HB,sp); OCU.uTrB.value[k].set(x0-pad,z0-pad,x1+pad,z1+pad); S._trUp=true; });
+    const pad=.354*(s0-T[n-1].s+L2)+cl.HB+30; OCU.uTrI.value[k].set(n,L2,cl.HB,S._trSp||sp); OCU.uTrB.value[k].set(x0-pad,z0-pad,x1+pad,z1+pad); S._trUp=true; });
   for(const S of FLEET.ships)if(!TS.includes(S))S._trUp=false; OCU.uTrN.value=TS.length;
   OCU.uT.value=t; OCU.uSea.value=sea.H; OCU.uDrift.value.set(driftX||0,driftZ||0); if(scene.fog)OCU.uSky.value.copy(scene.fog.color); OCU.uFoamL.value=night?.26:1-.45*wxStorm();
   let n=0; for(const S of FLEET.ships){ const cl=CLASSES[S.cls],L0=S.bodies.filter(x=>x.deadT===Infinity); for(const b of L0){ if(n>=10)break; if(!b.group.visible||b.resting||b.p.y<-80)continue; const e=b.e,l=Math.hypot(e[0],e[2])||1,F=cl.form; b.group.localToWorld(tmpV.set(0,0,0)); OCU.uShC.value[n].set(F.bow0,F.bowP,F.st0,F.stK); OCU.uShD.value[n].set(b.xa,b.xb,F.stP,S._trUp?1:0);
-      const sp=L0.length===1?(replay.on?(S._spd||0):S.speed):0, sk=clamp((b.sub-.84)/.12,0,1); OCU.uShA.value[n].set(tmpV.x,tmpV.z,e[0]/l,e[2]/l); OCU.uShB.value[n].set(cl.LH,cl.HB,sp,sk); n++; } }
+      const sp=L0.length===1&&b.sub<.85&&Math.abs(b.list)<25?(replay.on?(S._spd||0):S.speed):0, sk=clamp((b.sub-.84)/.12,0,1); OCU.uShA.value[n].set(tmpV.x,tmpV.z,e[0]/l,e[2]/l); OCU.uShB.value[n].set(cl.LH,cl.HB,sp,sk); n++; } }
   OCU.uShN.value=n; let v=0; for(const V of VORT){ if(v>=6)break; if(V.str<.02)continue; OCU.uVx.value[v++].set(V.x,V.z,V.R,Math.min(1,V.str)); } OCU.uVxN.value=v; }
 
 /* ---------- a ship going down: the sea boils with escaping air, a whirl of foam, a dip in the surface, and wreckage floating up ---------- */
@@ -2931,6 +2936,10 @@ function frame(now){
 }
 buildWaves(); paintSky(0); buildShip(); fleetInit(); drawTabs(); setTool('look'); hintText.textContent='Pick a tool, then click the ship. Drag to look around.'; resize(); applySea();
 drawSaves(); initSharing(); const roomQ=new URLSearchParams(location.search).get('room'); try{ if(!roomQ&&!localStorage.getItem('dc-tut'))setTimeout(coachStart,900); }catch(e){} mpInitUI(roomQ); log('USS Iowa under way, '+ship.comps.length+' watertight compartments manned and ready.');
+function setPanels(hide){ document.body.classList.toggle('nopanels',hide); const b=$('bPanels'); b.setAttribute('aria-pressed',hide); b.textContent=hide?'Show panels':'Hide panels'; b.title=(hide?'Bring the panels back':'Hide the panels to see only the 3D view')+' (H)'; try{localStorage.setItem('dc-nopanels',hide?'1':'0');}catch(e){} }
+$('bPanels').onclick=()=>setPanels(!document.body.classList.contains('nopanels'));
+window.addEventListener('keydown',e=>{ if(e.ctrlKey||e.metaKey||e.altKey||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return; if(e.key==='h'||e.key==='H'){ setPanels(!document.body.classList.contains('nopanels')); e.preventDefault(); } });
+try{ if(localStorage.getItem('dc-nopanels')==='1')setPanels(true); }catch(e){}
 window.__sim={FLEET,addFleetShip,removeFleetShip,commandShip,useShip,mbOf,get frameVX(){return frameVX;},get camera(){return camera;},AAG,armAA,exitAA,pickAAMount,stepAA,setLock,cycleLock,sealAll,pumpDry,firesOut,refloat,orderAbandon,fireSalvo,setGunCam,gun,gunAim,kamCrash,spawnWave,launchTorpedo,startSub,startCrossing,torpedoAttack,depthCharges,leadDir,makeSave,loadSave,pilot,enterPilot,exitPilot,tourNext,get berg(){return berg;},halfB,setShip,startScenario,get scn(){return ship.scn;},blowOff,V3,set follow(v){follow=v;},get ship(){return ship;},simulate,torpedoHit,detonate,splitBody,get t(){return simT;},setXray,liveBodies,cam,setTool,counterFlood,MP,mpHost,mpJoin,mpLeave,mpStart,mpPick,mpBackToLobby,mpSnap,mpApply,mpCheck,shellVsShips,shellSweep,isClient,targetsList,tgtValid,foeShips,nearestFoeTgt,fireLive,gunsManned,crewTotals,mainBody,turretManned,applyCompTool,select,airStrike,airCounts,airRecall,startFly,exitFly,FLY,carrierOK,launchPlane,airLaunchNow,flyPlane,ghostAir,WX,WX_KINDS,visRange,spotted,mpSpotUpdate,applyWX,wxLine,get timeScale(){return timeScale;},set timeScale(v){timeScale=v;}};
 requestAnimationFrame(frame);
 })();
