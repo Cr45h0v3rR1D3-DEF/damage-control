@@ -14,7 +14,7 @@ muzzle blast that flattens and sprays the sea. Anti-aircraft mounts track and le
 with crews at the light guns. The sea has wind ripples, whitecaps in heavy weather, bow waves and wakes, and a
 ship going down leaves a boiling whirl of foam and wreckage floating back up.
 
-Splash sounds, all CC0 (public domain) on Freesound: "Big Splash" by Bird_man, "Water splash" by speedygonzo, "Water Explosion" by Sheyvan, "POOL CANONBALL DIVE 4" by tbsounddesigns, "NổLớnDướiNước2" by SieuAmThanh, "S17-22 Underwater explosions" by craigsmith, "Sailing boat, bow wave (close perspective)" by Pfannkuchn.
+Sound recordings from Freesound. CC BY (credit required): "Cannon artillery - distant gunshots" by Aegersum (CC BY 3.0); "Flak_Exp" by kantouth, "Explosion 1" and "Explosion 4" by D4XX, "Plane Crash" by qubodup (CC BY 4.0). CC0 (public domain): "Artillery Gunfire" and "Tank Shots" by qubodup, "massive explosion" by Hugofski, "Wall Street Crash" by magnuswaker, "blast Mining" by WaveAdventurer, "Water Explosion" by Sheyvan, "POOL CANONBALL DIVE 4" by tbsounddesigns, "NổLớnDướiNước2" by SieuAmThanh, "S17-22 Underwater explosions" by craigsmith, "Sailing boat, bow wave (close perspective)" by Pfannkuchn, "Big Splash" by Bird_man, "Water splash" by speedygonzo.
 
 ## Multiplayer (PvP)
 
