@@ -1131,8 +1131,8 @@ function bigTurret(g,dir,bh,k,sty){ const p=TSTY[sty],L=p.L*k,W=p.W*k,H=p.H*k,sh
   const hs=new THREE.Mesh(hg,M.sup); hs.position.set(dir*p.hOff*k,bh,0); hs.rotation.y=dir<0?Math.PI:0; g.add(hs);
   const faceX=p.hOff*k+L/2-faceInset(sh,H,p.by*k),root=faceX-.7*k,len=p.muz*k-root,cx=(p.muz*k+root)/2,bagL=1.5*k;
   const bgeo=gcache('tb_'+sty+k,()=>barrelGeo(p.r0*k,p.r1*k,len)),baggeo=gcache('tg_'+sty+k,()=>new THREE.CylinderGeometry(p.r1*k*1.08,p.r1*k*2.1,bagL,12));
-  const cr=new THREE.Group(); cr.position.set(dir*root,bh+p.by*k,0); g.add(cr); const guns=[],tips=[];
-  for(let i=0;i<p.n;i++){ const z=(i-(p.n-1)/2)*p.sp*k*(p.n===2?2:1),br=new THREE.Mesh(bgeo,M.dark); br.rotation.z=-dir*Math.PI/2; br.position.set(dir*len/2,0,z); const bag=new THREE.Mesh(baggeo,MCAN); bag.position.y=-len/2+.55*k+bagL/2; br.add(bag); cr.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(dir*len,0,z)); }
+  const pv=faceX-.3*k,cr=new THREE.Group(); cr.position.set(dir*pv,bh+p.by*k,0); g.add(cr); const guns=[],tips=[];
+  for(let i=0;i<p.n;i++){ const z=(i-(p.n-1)/2)*p.sp*k*(p.n===2?2:1),br=new THREE.Mesh(bgeo,M.dark); br.rotation.z=-dir*Math.PI/2; br.position.set(dir*(cx-pv),0,z); const bag=new THREE.Mesh(baggeo,MCAN); bag.position.y=-len/2+.55*k+bagL/2; br.add(bag); cr.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(dir*(p.muz*k-pv),0,z)); }
   cr.rotation.z=dir*.05; g.userData.aimRig={type:'tur',dir,el:cr,tips,guns,ax:new V3(dir,0,0),recoil:1.3*k};
   return guns; }
 /* a twin secondary mount on the beam: base ring, enclosed gunhouse facing outboard, two barrels with blast bags */
@@ -1140,8 +1140,8 @@ function secHouse(g,sg,Lx,H,Dz,sp,bl,by,bz,r0,r1){ const key='sm_'+Lx+'_'+H+'_'+
   const base=new THREE.Mesh(gcache(key+'b',()=>new THREE.CylinderGeometry(Math.min(Lx,Dz)*.47,Math.min(Lx,Dz)*.5,.35,16)),M.dark); base.position.y=.17; g.add(base);
   const h=new THREE.Mesh(gcache(key+'h',()=>mergeGeo([[gunhouseGeo(Dz,Lx,hh,sh),gmx(0,0,0)],[new THREE.BoxGeometry(.9,.4,.8),gmx(-Dz*.12,hh+.2,Lx*.26)]])),M.sup); h.position.y=.3; h.rotation.y=-sg*Math.PI/2; g.add(h);
   const bgeo=gcache(key+'g',()=>barrelGeo(r0,r1,bl)),bag=gcache(key+'bag',()=>new THREE.CylinderGeometry(r1*1.1,r1*2.3,.8,8)),faceZ=Dz/2-faceInset(sh,hh,by-.3);
-  const el=new THREE.Group(); el.position.set(0,by,sg*(bz-bl/2)); g.add(el); const tips=[],guns=[];
-  for(const o of [-sp,sp]){ const br=new THREE.Mesh(bgeo,M.dark); br.rotation.x=sg*Math.PI/2; br.position.set(o,0,sg*bl/2); const bg=new THREE.Mesh(bag,MCAN); bg.position.y=-(bz-faceZ)+.3; br.add(bg); el.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(o,0,sg*bl)); }
+  const pz=faceZ-.15,el=new THREE.Group(); el.position.set(0,by,sg*pz); g.add(el); const tips=[],guns=[];
+  for(const o of [-sp,sp]){ const br=new THREE.Mesh(bgeo,M.dark); br.rotation.x=sg*Math.PI/2; br.position.set(o,0,sg*(bz-pz)); const bg=new THREE.Mesh(bag,MCAN); bg.position.y=-(bz-faceZ)+.3; br.add(bg); el.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(o,0,sg*(bz+bl/2-pz))); }
   el.rotation.x=-sg*.126; g.userData.aimRig={type:'dp',sg,el,tips,guns,ax:new V3(0,0,sg),recoil:.4}; }
 /* the destroyer's enclosed single 5-inch mount; returns its barrel */
 function ddMount(g,dir){ const sh={face:.85,y1:.55,roof:.35,side:.28,rx:1.2,ch:.35,back:0};
@@ -2107,7 +2107,7 @@ function torpedoHit(body,x,side){ ship.stats.torp++;
 function bombHit(body,lp,ap){ ship.stats.bomb++;
   const tr=ship.turrets.find(t=>t.alive&&t.g.parent===body.group&&Math.abs(t.x-lp.x)<CLS.turretHit[0]&&Math.abs(lp.z)<CLS.turretHit[1]);
   body.world(lp.x,lp.y,lp.z,tmpV); const wp=tmpV.clone();
-  if(tr){ explode(wp,1.3,undefined,'bombhit'); tr.guns.forEach(g=>{g.rotation.z+=tr.dir*rnd(-.12,.04);}); const r=Math.random(),nm=CLS.gunName(tr.idx); ship.secDamage[tr.sec]+=.1; blast(body,lp,6,.5);
+  if(tr){ explode(wp,1.3,undefined,'bombhit'); tr.guns.forEach(g=>{ const d=tr.dir*rnd(-.1,.03),h=g.userData.home; g.rotation.z+=d; if(h){ const c=Math.cos(d),sn=Math.sin(d),x=h.x*c-h.y*sn,y=h.x*sn+h.y*c; h.set(x,y,h.z); g.position.copy(h); } }); const r=Math.random(),nm=CLS.gunName(tr.idx); ship.secDamage[tr.sec]+=.1; blast(body,lp,6,.5);
     if(r<(ap?.2:.02)){log('Bomb penetrates '+nm+'. Flash reaches the magazine.'); detonate(tr.magIdx);} else if(r<.75){log('Bomb hits '+nm+'. Fire spreads down the hoists.'); magFire(tr.magIdx);} else log('Bomb hits '+nm+'. The armour holds.'); return; }
   const c1=compAt(body,lp.x,lp.y-Math.min(1.5,(LEVELS[3].y1-LEVELS[3].y0)*.5),lp.z); if(!c1){explode(wp,1,undefined,'bombhit');return;} const deep=Math.random()<.4, c2=deep?compAt(body,lp.x,c1.y0-1.5,lp.z):null, hit=c2&&c2!==c1&&c2.kind!=='tank'?c2:c1;
   const roof=Math.abs(lp.y-c1.y1)<1.2; addHole(c1,roof?new V3(lp.x,c1.y1,lp.z):lp.clone(),3.5,new V3(0,1,0),!roof,true); ignite(hit,.65,true); if(hit!==c1)rupture(c1,hit,3);
