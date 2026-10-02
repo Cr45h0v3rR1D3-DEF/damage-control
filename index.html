@@ -519,6 +519,7 @@ function mpApplyEv(e){ const S=e.s>=0?FLEET.ships[e.s]:null; if(S)useShip(S);
     case 'sx': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ supHitFx(b,p,new V3(e.p[0],e.p[1],e.p[2]),new V3(e.n[0],e.n[1],e.n[2]),e.r,!!e.o,e.f,!!e.bu,e.sp,e.dp||0,!!e.gg); break; } } break; }
     case 'wk': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ wreckFx(p); if(p.userData.onGone){ const f=p.userData.onGone; p.userData.onGone=null; f(); } break; } } break; }
     case 'shp': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const n0=ship.debris.length; quietLog=true; try{ shatterPart(p,b,new V3(e.p[0],e.p[1],e.p[2]),e.pw,e.sd); } finally{ quietLog=false; } for(let i=n0;i<ship.debris.length;i++){ const d=ship.debris[i]; d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=d.v.clone(); d._tT=MP.tHost; d._cr=false; } break; } } break; }
+    case 'gx': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const n0=ship.debris.length; quietLog=true; try{ mountBurstFx(p,b,new V3(e.p[0],e.p[1],e.p[2]),e.pw,e.sd); } finally{ quietLog=false; } for(let i=n0;i<ship.debris.length;i++){ const d=ship.debris[i]; d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=d.v.clone(); d._tT=MP.tHost; d._cr=false; } break; } } break; }
     case 'bo': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const v0=e.v?new V3(e.v[0],e.v[1],e.v[2]):new V3(); quietLog=true; try{ blowOff(p,b,v0.clone(),new V3(),true); } finally{ quietLog=false; } const d=ship.debris[ship.debris.length-1]; if(d){ d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=v0; d._tT=MP.tHost; d._cr=false; } break; } } break; }
     case 'ch': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ charPart(p); break; } } break; }
     case 'x': explode(new V3(e.p[0],e.p[1],e.p[2]),e.z,false,e.k); break;
@@ -1248,7 +1249,7 @@ function bigTurret(g,dir,bh,k,sty){ const p=TSTY[sty],L=p.L*k,W=p.W*k,H=p.H*k,sh
 /* a twin secondary mount on the beam: base ring, enclosed gunhouse facing outboard, two barrels with blast bags */
 function secHouse(g,sg,Lx,H,Dz,sp,bl,by,bz,r0,r1){ const key='sm_'+Lx+'_'+H+'_'+Dz+'_'+bl,sh={face:Dz*.24,y1:.5,roof:Dz*.12,side:.3,rx:Lx*.3,ch:.45,back:0},hh=H-.3;
   const base=new THREE.Mesh(gcache(key+'b',()=>new THREE.CylinderGeometry(Math.min(Lx,Dz)*.47,Math.min(Lx,Dz)*.5,.35,16)),M.dark); base.position.y=.17; g.add(base);
-  const h=new THREE.Mesh(gcache(key+'h',()=>mergeGeo([[gunhouseGeo(Dz,Lx,hh,sh),gmx(0,0,0)],[new THREE.BoxGeometry(.9,.4,.8),gmx(-Dz*.12,hh+.2,Lx*.26)]])),M.sup); h.position.y=.3; h.rotation.y=-sg*Math.PI/2; g.add(h);
+  const h=new THREE.Mesh(gcache(key+'h',()=>mergeGeo([[gunhouseGeo(Dz,Lx,hh,sh),gmx(0,0,0)],[new THREE.BoxGeometry(.9,.4,.8),gmx(-Dz*.12,hh+.2,Lx*.26)]])),M.sup); h.position.y=.3; h.rotation.y=-sg*Math.PI/2; g.add(h); g.userData.house=h; g.userData.baseRing=base;
   const bgeo=gcache(key+'g',()=>barrelGeo(r0,r1,bl)),bag=gcache(key+'bag',()=>new THREE.CylinderGeometry(r1*1.1,r1*2.3,.8,8)),faceZ=Dz/2-faceInset(sh,hh,by-.3);
   const pz=faceZ-.15,el=new THREE.Group(); el.position.set(0,by,sg*pz); g.add(el); const tips=[],guns=[];
   for(const o of [-sp,sp]){ const br=new THREE.Mesh(bgeo,M.dark); br.rotation.x=sg*Math.PI/2; br.position.set(o,0,sg*(bz-pz)); const bg=new THREE.Mesh(bag,MCAN); bg.position.y=-(bz-faceZ)+.3; br.add(bg); el.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(o,0,sg*(bz+bl/2-pz))); }
@@ -1256,7 +1257,7 @@ function secHouse(g,sg,Lx,H,Dz,sp,bl,by,bz,r0,r1){ const key='sm_'+Lx+'_'+H+'_'+
 /* the destroyer's enclosed single 5-inch mount; returns its barrel */
 function ddMount(g,dir){ const sh={face:.85,y1:.55,roof:.35,side:.28,rx:1.2,ch:.35,back:0};
   const base=new THREE.Mesh(gcache('dm_b',()=>new THREE.CylinderGeometry(1.45,1.55,.3,16)),M.dark); base.position.y=.15; g.add(base);
-  const h=new THREE.Mesh(gcache('dm_h',()=>mergeGeo([[gunhouseGeo(3.4,2.8,2.1,sh),gmx(0,0,0)],[new THREE.BoxGeometry(.7,.35,.6),gmx(-.3,2.27,.7)]])),M.sup); h.position.y=.25; h.rotation.y=dir<0?Math.PI:0; g.add(h);
+  const h=new THREE.Mesh(gcache('dm_h',()=>mergeGeo([[gunhouseGeo(3.4,2.8,2.1,sh),gmx(0,0,0)],[new THREE.BoxGeometry(.7,.35,.6),gmx(-.3,2.27,.7)]])),M.sup); h.position.y=.25; h.rotation.y=dir<0?Math.PI:0; g.add(h); g.userData.house=h; g.userData.baseRing=base;
   const faceX=1.7-faceInset(sh,2.1,1.25),root=faceX-.25,len=6-root;
   const cr=new THREE.Group(); cr.position.set(dir*root,1.5,0); g.add(cr); const br=new THREE.Mesh(gcache('dm_g',()=>barrelGeo(.1,.13,len)),M.dark); br.rotation.z=-dir*Math.PI/2; br.position.set(dir*len/2,0,0);
   const bg=new THREE.Mesh(gcache('dm_bag',()=>new THREE.CylinderGeometry(.14,.28,.7,8)),MCAN); bg.position.y=-len/2+.55; br.add(bg); cr.add(br); br.userData.home=br.position.clone(); cr.rotation.z=dir*.06;
@@ -1687,6 +1688,64 @@ function wreckPart(p,body,lp,power){ if(p.userData.wrecked||p.userData.gone)retu
   body.group.updateMatrixWorld(true); spawnFrags(body,body.group.localToWorld(c.clone()),n.clone().transformDirection(body.group.matrixWorld),Math.round(4*FXQ)+1,16*Math.sqrt(power),partMat(p),false); }
 
 function wreckAskew(p){ const A=ship.aa.find(A=>A.obj===p); if(A&&rigOf(A)){ try{ rigApply(A,(A.yaw||0)+rnd(-.35,.35),clamp((A.pitch||0)+rnd(-.1,.45),-.05,1.2)); }catch(e){} } }
+/* ---------- a direct hit on a 5-inch or light AA mount blows it apart: barrels, gun house, cradle, shield and carriage fly off as the
+   parts they are, burnt, and lie where they come down. The base ring or the torn tub stays behind. Main turrets never do this ---------- */
+function gunMountOf(p){ if(!p||p.userData.gone||p.userData.burst||!p.userData.aimRig)return null; const A=ship.aa.find(A=>A.obj===p); if(!A)return null; const t=ship.turrets.find(t=>t.g===p); return t&&t.big?null:A; }
+function boxDist(B,lp){ return Math.hypot(Math.max(B.min.x-lp.x,0,lp.x-B.max.x),Math.max(B.min.y-lp.y,0,lp.y-B.max.y),Math.max(B.min.z-lp.z,0,lp.z-B.max.z)); }
+/* a part's box in the ship's frame, measured again from what is left of it */
+function partBB(p,body){ const B=new THREE.Box3(),bb=new THREE.Box3(),m=new THREE.Matrix4(); body.group.updateMatrixWorld(true); const inv=new THREE.Matrix4().copy(body.group.matrixWorld).invert();
+  p.traverse(k=>{ if(!k.isMesh||!k.geometry)return; if(!k.geometry.boundingBox)k.geometry.computeBoundingBox(); bb.copy(k.geometry.boundingBox).applyMatrix4(m.multiplyMatrices(inv,k.matrixWorld)); B.union(bb); }); return B; }
+const _burntDS=new Map(); function charDS(m){ let b=_burntDS.get(m); if(!b){ b=charOf(m).clone(); b.side=THREE.DoubleSide; _burntDS.set(m,b); shipMats.push(b); } return b; }
+/* the tub with its rim torn ragged and peeled outward */
+function raggedTubGeo(r,h,sd){ const g=new THREE.CylinderGeometry(r,r*1.05,h,16,2,true),P=g.attributes.position;
+  for(let i=0;i<P.count;i++){ const x=P.getX(i),y=P.getY(i),z=P.getZ(i); if(y<h*.4)continue; const k=hash(Math.round(x*40)/40+sd,Math.round(z*40)/40),f=1+k*.14; P.setXYZ(i,x*f,y-k*h*.45,z*f); }
+  g.computeVertexNormals(); return g; }
+function mountBurstFx(p,body,lp,power,seed,noThrow){ const R=p.userData.aimRig; if(!R||p.userData.burst||p.userData.gone)return; fragSeed=seed||1; p.userData.burst=true; p.userData.wrecked=true;
+  body.group.updateMatrixWorld(true); p.updateMatrixWorld(true); const pieces=[],tub=R.type==='tub';
+  const take=o=>{ o.traverse(k=>{ if(k.isMesh&&k.material&&!Array.isArray(k.material)&&k.material!==MCAN)k.material=charOf(k.material); }); pieces.push(o); };
+  const mk=(geo,mat,par,x,y,z,rx,ry,rz,own)=>{ const m=new THREE.Mesh(geo,mat); if(own)m.userData.ownGeo=true; m.position.set(x,y,z); m.rotation.set(rx||0,ry||0,rz||0); par.add(m); m.updateMatrixWorld(true); take(m); return m; };
+  if(tub){ const gn=R.tr,br=R.guns[0],nb=R.nb,wd=nb*.36+.3;
+    // the barrels wrenched off the slide, the slide itself, the shield and the carriage on its pedestal
+    const bg=gcache('aabr',()=>mergeGeo([[new THREE.CylinderGeometry(.06,.085,3.1,6),gmx(0,0,0)],[new THREE.CylinderGeometry(.12,.12,.45,6),gmx(0,1.4,0)]]));
+    // two come loose; any others stay on the slide
+    const zs=[...Array(nb)].map((_,i)=>(i-(nb-1)/2)*.36),loose=nb>2?[0,nb-1]:[0,1];
+    for(const i of loose)mk(bg,MGUN,br,1.5,.05,zs[i],frnd(-.2,.2),0,-Math.PI/2+frnd(-.3,.3));
+    mk(gcache('aasl'+nb,()=>mergeGeo([[new THREE.BoxGeometry(1.1,.42,wd),gmx(.3,0,0)],...zs.filter((_,i)=>!loose.includes(i)).map(z=>[bg,gmx(1.5,.05,z,0,0,-Math.PI/2)])])),MGUN,br,0,0,0);
+    mk(gcache('aash'+nb,()=>new THREE.BoxGeometry(.08,1.05,wd+.6)),MGUN,gn,1.05,1.25,0,0,0,-.25);
+    mk(gcache('aaca'+nb,()=>mergeGeo([[new THREE.CylinderGeometry(.42,.5,.7,10),gmx(0,.35,0)],[new THREE.BoxGeometry(.9,.4,wd+.3),gmx(-.1,.78,0)]])),MGUN,gn,0,0,0);
+    // plates torn out of the tub wall
+    const r=R.r,h=R.h; for(let k=0;k<1;k++){ const arc=frnd(.7,1.2); mk(new THREE.CylinderGeometry(r*1.02,r*1.06,h*frnd(.55,.85),4,1,true,frnd(0,6.28),arc),charDS(M.sup),p,0,h*.1,0,0,0,0,true); } }
+  else { const h=p.userData.house; if(h)take(h);
+    for(const g of R.guns)take(g);
+    const w=R.guns.length>1?Math.abs(R.guns[0].position.x-R.guns[1].position.x)+.8:.9; mk(gcache('cradle'+r2(w),()=>new THREE.BoxGeometry(w,.55,1.2)),M.dark,R.el,0,0,0,0,R.type==='tur'?Math.PI/2:0,0);
+    // the thin gunhouse bursts: its roof bulges out and plates tear off it
+    if(h){ const c=h.getWorldPosition(new V3()),up=new V3(0,1,0).transformDirection(p.matrixWorld); h.geometry.computeBoundingBox(); const hb=h.geometry.boundingBox,hh=hb.max.y-hb.min.y;
+      dentObj(h,c.clone().addScaledVector(up,hh*.9),up,Math.max(hb.max.x-hb.min.x,hb.max.z-hb.min.z)*.6,.5);
+      mk(tornBox(frnd(1,2.2),.09,frnd(.8,1.7)),M.sup,h,frnd(-1,1),hh*frnd(.6,1),frnd(-1,1),frnd(-.5,.5),frnd(0,3),frnd(-.5,.5),true); } }
+  if(noThrow){ for(const m of pieces)if(m.parent)m.parent.remove(m); }
+  else { const q=body.group.getWorldQuaternion(new THREE.Quaternion()),qi=q.clone().invert();
+    for(const m of pieces){ scene.attach(m); m.updateMatrixWorld(true); const wc=m.getWorldPosition(new V3()),lc=body.group.worldToLocal(wc.clone()),dir=lc.clone().sub(lp); dir.y=Math.abs(dir.y)+frnd(1.5,4); dir.normalize().applyQuaternion(q);
+      const v=dir.multiplyScalar(frnd(9,22)*Math.sqrt(power)).add(body.v),D=makeDebris(m,v,new V3(frnd(-4,4),frnd(-3,3),frnd(-4,4)),false);
+      D.home={body,pos:body.group.worldToLocal(m.position.clone()),quat:qi.clone().multiply(m.quaternion),xrayOnly:false}; D.ghost=.15; D.stick=true; ship.debris.push(D); } }
+  // everything else on it goes too: the gun, the marks of earlier hits and the room views behind them. The base ring or tub stays, burnt
+  const keep=p.userData.baseRing; for(const k of p.children.slice())if(k!==keep)p.remove(k); p.userData.holes=[];
+  if(tub){ p.geometry=raggedTubGeo(R.r,R.h,seed%97); p.userData.ownGeo=true; p.material=charDS(M.sup); }
+  charPart(p); p.userData.bb=partBB(p,body); ship.supportDirty=true;
+  if(p.userData.onGone){ const f=p.userData.onGone; p.userData.onGone=null; f(); }
+  if(!noThrow){ const B=p.userData.bb,c=body.group.localToWorld(new V3((B.min.x+B.max.x)/2,B.max.y+.3,(B.min.z+B.max.z)/2)),up=new V3(0,1,0).transformDirection(body.group.matrixWorld);
+    spawnFrags(body,c,up,Math.round(8*FXQ)+2,22*Math.sqrt(power),M.dark,true); for(let k=0;k<Math.round(4*FXQ)+2;k++){ tmpV2.copy(up).multiplyScalar(rnd(4,10)).add(tmpV.set(rnd(-3,3),0,rnd(-3,3))); fx('smoke',c,tmpV2,.7); } } }
+/* the host decides; every screen blows it apart the same way, piece for piece. Its ready ammunition may cook off a moment later */
+function mountBurst(p,body,lp,power,quiet){ const A=gunMountOf(p); if(!A)return false; const seed=1+((Math.random()*2147483000)|0),dp=isDP(A),nm=mountName(A),B=p.userData.bb,c=new V3((B.min.x+B.max.x)/2,(B.min.y+B.max.y)/2,(B.min.z+B.max.z)/2);
+  if(MP.rec)mpEv({e:'gx',s:body.S.idx,pid:p.userData.pid,p:[r2(lp.x),r2(lp.y),r2(lp.z)],pw:r2(power),sd:seed});
+  mountBurstFx(p,body,lp,power,seed); body.world(c.x,c.y,c.z,tmpV); explode(tmpV.clone(),dp?.9:.6,undefined,'hit');
+  let lost=0; for(const f of ship.crew.figs)if(f.state==='deck'&&f.body===body&&Math.hypot(f.lx-c.x,f.lz-c.z)<(dp?4:3)){f.state='gone';ship.crew.dead+=f.n;lost+=f.n;}
+  if(!quiet)log('The '+nm+' is blown apart.'+lostMsg(lost));
+  if(Math.random()<(dp?.4:.3))ship.shots.push({type:'cook',t:rnd(.5,1.8),body,lp:c,dp,nm}); return true; }
+function cookOff(body,lp,dp,nm){ body.world(lp.x,lp.y,lp.z,tmpV); const wp=tmpV.clone(); explode(wp,dp?1:.65,undefined,'hit');
+  for(let i=1;i<(dp?5:3);i++)ship.shots.push({type:'boom',t:i*rnd(.15,.35),pos:wp.clone().add(new V3(rnd(-2,2),rnd(0,3),rnd(-2,2))),size:rnd(.3,.55)});
+  let lost=0; for(const f of ship.crew.figs)if(f.state==='deck'&&f.body===body&&Math.hypot(f.lx-lp.x,f.lz-lp.z)<(dp?6:4)){f.state='gone';ship.crew.dead+=f.n;lost+=f.n;}
+  const c=compAt(body,lp.x,lp.y-1.5,lp.z); if(c&&Math.random()<(dp?.5:.25))ignite(c,.4,true);
+  blast(body,lp,dp?5:3.5,dp?.45:.3); log('Ready ammunition at the '+nm+' cooks off.'+lostMsg(lost)); }
 /* when a structure goes, the marks of hits on the rooms inside it go too */
 function hideSupMarks(body,bx){ for(const h of ship.holes){ if(!h.marker||!h.c||!h.c.sup||h.c.body!==body)continue; const c=h.c; if(c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ h.marker.visible=false; if(h.interior)h.interior.g.visible=false; } } }
 
@@ -1711,9 +1770,10 @@ function blowOff(obj,body,vel,spin,quiet){ if(obj.userData.gone)return; if(obj.u
   i=ship.mach.indexOf(obj); if(i>=0){ ship.mach.splice(i,1); obj.visible=true; obj.traverse(k=>{ k.renderOrder=0; if(k.material===MM.steel)k.material=M.gray; else if(k.material===MM.boiler)k.material=M.rust; else if(k.material===MM.shaft)k.material=M.bronze; }); }
   scene.add(obj); obj.position.copy(wp); obj.quaternion.copy(wq); ship.debris.push(makeDebris(obj,vel,spin||new V3(rnd(-1.6,1.6),rnd(-.6,.6),rnd(-1.6,1.6)),!obj.userData.topside)); ship.debris[ship.debris.length-1].home=home; ship.supportDirty=true;
   if(obj.userData.box&&!quiet)openRooms(body,obj.userData.box); if(obj.userData.onGone)obj.userData.onGone(); }
-function blast(body,lp,R,power,filter,big){ let n=0; if(!filter)for(const cn of ship.conns)if(cn.a.body===body&&cn.rupt<=0&&cn.pos.distanceTo(lp)<R*1.6)cn.str*=rnd(.5,.85); for(const p of body.parts.slice()){ if(filter&&!filter(p))continue; if(p.userData.fixed)continue; const q=p.position,d=Math.hypot(q.x-lp.x,q.y-lp.y,q.z-lp.z); if(d>R)continue; if(Math.random()>(1-d/R)*power*(p.userData.heavy?.45:1))continue;
+function blast(body,lp,R,power,filter,big){ let n=0; if(!filter)for(const cn of ship.conns)if(cn.a.body===body&&cn.rupt<=0&&cn.pos.distanceTo(lp)<R*1.6)cn.str*=rnd(.5,.85); for(const p of body.parts.slice()){ if(filter&&!filter(p))continue; if(p.userData.fixed)continue; if(!filter&&!big&&p.userData.aimRig&&p.userData.bb&&boxDist(p.userData.bb,lp)<Math.max(.8,R*.2)&&mountBurst(p,body,lp,power)){ n++; continue; } const q=p.position,d=Math.hypot(q.x-lp.x,q.y-lp.y,q.z-lp.z); if(d>R)continue; if(Math.random()>(1-d/R)*power*(p.userData.heavy?.45:1))continue;
     const B=p.userData.bb,mx=B?Math.max(B.max.x-B.min.x,B.max.y-B.min.y,B.max.z-B.min.z):0,isT=ship.turrets.some(t=>t.g===p);
     if(!filter&&!big){ if(!isT&&!ship.mach.includes(p)&&(p.userData.onGone||mx<4))wreckPart(p,body,lp,power); continue; }
+    if(!filter&&big&&p.userData.aimRig&&mountBurst(p,body,lp,power,true)){ n++; continue; }
     if(!filter&&big&&!isT&&mx>2.5){ if(shatter(p,body,lp,power))n++; continue; }
     const v=new V3(q.x-lp.x,Math.abs(q.y-lp.y)+5,q.z-lp.z).normalize().multiplyScalar(rnd(9,24)*Math.sqrt(power)).applyQuaternion(body.q).add(body.v); blowOff(p,body,v); n++; } if(!filter)blastDents(body,lp,R,power); return n; }
 
@@ -2441,7 +2501,7 @@ function solveDebris(d,C,nC,com){ const m=d.mass; let hit=0,hc=null;
 function debrisVsBody(d,b,P,n0,C,nC){ const e=b.e; let ax=1e9,ay=1e9,az=1e9,bx=-1e9,by=-1e9,bz=-1e9;
   for(let i=0;i<n0;i++){ const wx=P[i].x-b.bx,wy=P[i].y-b.by,wz=P[i].z-b.bz,L=_dL[i].set(e[0]*wx+e[1]*wy+e[2]*wz,e[4]*wx+e[5]*wy+e[6]*wz,e[8]*wx+e[9]*wy+e[10]*wz); if(L.x<ax)ax=L.x; if(L.x>bx)bx=L.x; if(L.y<ay)ay=L.y; if(L.y>by)by=L.y; if(L.z<az)az=L.z; if(L.z>bz)bz=L.z; }
   if(bx<b.xa-2||ax>b.xb+2||az>40||bz<-40)return nC;
-  const add=(i,nx,ny,nz,depth,part)=>{ if(nC>=DCON.length)return; const c=DCON[nC++]; c.p.copy(P[i]); c.n.set(e[0]*nx+e[4]*ny+e[8]*nz,e[1]*nx+e[5]*ny+e[9]*nz,e[2]*nx+e[6]*ny+e[10]*nz); c.depth=depth; c.b=b; c.part=part; c.lp.copy(_dL[i]); };
+  const add=(i,nx,ny,nz,depth,part)=>{ if(nC>=DCON.length)return; const c=DCON[nC++]; c.p.copy(P[i]); c.n.set(e[0]*nx+e[4]*ny+e[8]*nz,e[1]*nx+e[5]*ny+e[9]*nz,e[2]*nx+e[6]*ny+e[10]*nz); c.depth=depth; c.b=b; c.part=part; c.o=null; c.lp.copy(_dL[i]); };
   // fittings, deckhouses, turrets, funnels: a point inside one is pushed out through its nearest face
   // fittings the part was built into when it tore loose are left alone until it has come clear of them
   if(!d.ign){ d.ign=new Set(); for(const p of b.parts){ const B=p.userData.bb; if(B&&!p.userData.gone&&B.max.x>ax+.25&&B.min.x<bx-.25&&B.max.y>ay+.25&&B.min.y<by-.25&&B.max.z>az+.25&&B.min.z<bz-.25)d.ign.add(p); } }
@@ -2457,7 +2517,7 @@ function debrisVsBody(d,b,P,n0,C,nC){ const e=b.e; let ax=1e9,ay=1e9,az=1e9,bx=-
       _t3.set(b.bx+e[0]*lx+e[4]*ly+e[8]*lz,b.by+e[1]*lx+e[5]*ly+e[9]*lz,b.bz+e[2]*lx+e[6]*ly+e[10]*lz);
       _t1.copy(_t3).sub(d.g.position).applyQuaternion(_qi).sub(d.off); const qx=h.x-Math.abs(_t1.x),qy=h.y-Math.abs(_t1.y),qz=h.z-Math.abs(_t1.z); if(qx<=0||qy<=0||qz<=0)continue;
       const c=DCON[nC++]; c.p.copy(_t3); let dep; if(qx<=qy&&qx<=qz){ c.n.set(-(Math.sign(_t1.x)||1),0,0); dep=qx; } else if(qy<=qz){ c.n.set(0,-(Math.sign(_t1.y)||1),0); dep=qy; } else { c.n.set(0,0,-(Math.sign(_t1.z)||1)); dep=qz; }
-      c.n.applyQuaternion(d.g.quaternion); c.depth=Math.min(dep,2); c.b=b; c.part=p; c.lp.set(lx,ly,lz); } }
+      c.n.applyQuaternion(d.g.quaternion); c.depth=Math.min(dep,2); c.b=b; c.part=p; c.o=null; c.lp.set(lx,ly,lz); } }
   // the hull: a point below the deck edge and inside the plating goes out by the shorter way, up through the deck or out through the side
   for(let i=0;i<n0;i++){ const L=_dL[i]; if(L.x<b.xa||L.x>b.xb)continue; const s=L.x/LH,dk=deckY(s),ky=keelY(s); if(L.y>=dk||L.y<ky-.5)continue; const hb=halfB(L.x,clamp(L.y,ky,dk)),az2=Math.abs(L.z); if(az2>=hb)continue;
     const up=dk-L.y,side=hb-az2; if(up<=side+.3){ if(up<5)add(i,0,1,0,up,null); } else if(side<4)add(i,0,0,L.z>=0?1:-1,side,null); }
@@ -2468,16 +2528,17 @@ function debrisSmash(d,b,local,com){ d.hit=true; const dk=deckY(local.x/LH),c=co
 /* fast parts take several small steps so they cannot jump through a thin mount in one frame */
 function stepDebris(dt){ let vm=0; for(const d of ship.debris)if(!d.rest){ const l=d.v.lengthSq(); if(l>vm)vm=l; } const n=Math.min(4,Math.max(1,Math.ceil(Math.sqrt(vm)*dt/.45))); for(let i=0;i<n;i++)stepDebris1(dt/n); }
 function stepDebris1(dt){
-  for(const d of ship.debris){ if(d.rest){ if(frameVX||frameVZ){ d.g.position.x-=frameVX*dt; d.g.position.z-=frameVZ*dt; if(d.cx!==undefined){d.cx-=frameVX*dt;d.cz-=frameVZ*dt;} d.wpDone=false; } continue; }
-    const g=d.g; d.age+=dt; if(!d.he){ d.he=new V3(d.r,d.r,d.r); } const LP=debrisLocalPts(d); dC.copy(d.off).applyQuaternion(g.quaternion).add(g.position);
+  for(const d of ship.debris){ if(d.rest&&d.stuck){ if(debrisRide(d))continue; }
+    if(d.rest){ if(frameVX||frameVZ){ d.g.position.x-=frameVX*dt; d.g.position.z-=frameVZ*dt; if(d.cx!==undefined){d.cx-=frameVX*dt;d.cz-=frameVZ*dt;} d.wpDone=false; } continue; }
+    d.stuck=null; const g=d.g; d.age+=dt; if(!d.he){ d.he=new V3(d.r,d.r,d.r); } const LP=debrisLocalPts(d); dC.copy(d.off).applyQuaternion(g.quaternion).add(g.position);
     const wy=waveY(dC.x,dC.z,simT),under=dC.y<wy; if(under&&!d.wet){ d.wet=true; snd.splash(camera.position.distanceTo(dC),Math.min(3,d.r*.5)); tmpV.set(dC.x,wy,dC.z); const n=Math.min(30,8+d.r*4); for(let k=0;k<n;k++){tmpV2.set(rnd(-.4,.4),rnd(.7,1.3),rnd(-.4,.4)).multiplyScalar(10+d.r*2.5);fx('spray',tmpV,tmpV2,.6+d.r*.12);} }
     d.v.y-=(under?(d.heavy?3.2:1.7):G)*dt; if(under){ d.v.multiplyScalar(Math.exp(-(d.heavy?.45:.65)*dt)); d.w.multiplyScalar(Math.exp(-1.5*dt)); } else d.w.multiplyScalar(Math.exp(-.05*dt));
     g.position.addScaledVector(d.v,dt); dC.addScaledVector(d.v,dt);
     const wl=d.w.length(); if(wl>1e-4){ dT.copy(d.off).applyQuaternion(g.quaternion); _q.setFromAxisAngle(tmpV.copy(d.w).multiplyScalar(1/wl),wl*dt); g.quaternion.premultiply(_q); dR.copy(d.off).applyQuaternion(g.quaternion); g.position.add(dT).sub(dR); }
     const n0=LP.length; for(let i=0;i<n0;i++)_dP[i].copy(LP[i]).applyQuaternion(g.quaternion).add(g.position);
     let nC=0,onWreck=true;
-    if(d.age>d.ghost)for(const b of ship.bodies){ if(b.deadT!==Infinity)continue; const L=(b.xb-b.xa)/2+30; if(Math.abs(dC.x-b.p.x)>L+60||Math.abs(dC.z-b.p.z)>L+60||Math.abs(dC.y-b.p.y)>L+60)continue; const before=nC; nC=debrisVsBody(d,b,_dP,n0,DCON,nC); if(nC>before&&!b.resting)onWreck=false; }
-    for(let i=0;i<n0&&nC<DCON.length;i++)if(_dP[i].y<SEABED){ const c=DCON[nC++]; c.p.copy(_dP[i]); c.n.set(0,1,0); c.depth=SEABED-_dP[i].y; c.b=null; c.part=null; }
+    if(d.age>d.ghost&&!(d.stick&&d.wet&&dC.y<WL-HB-12))for(const b of ship.bodies){ if(b.deadT!==Infinity)continue; const L=(b.xb-b.xa)/2+30; if(Math.abs(dC.x-b.p.x)>L+60||Math.abs(dC.z-b.p.z)>L+60||Math.abs(dC.y-b.p.y)>L+60)continue; const before=nC; nC=debrisVsBody(d,b,_dP,n0,DCON,nC); if(nC>before&&!b.resting)onWreck=false; }
+    for(let i=0;i<n0&&nC<DCON.length;i++)if(_dP[i].y<SEABED){ const c=DCON[nC++]; c.p.copy(_dP[i]); c.n.set(0,1,0); c.depth=SEABED-_dP[i].y; c.b=null; c.part=null; c.o=null; }
     nC=debrisVsDebris(d,_dP,n0,nC);
     const touching=nC>0;
     if(touching){ const r=solveDebris(d,DCON,nC,dC); const hc=r.hc;
@@ -2486,15 +2547,24 @@ function stepDebris1(dt){
         if(dC.y>waveY(dC.x,dC.z,simT)+1&&Math.random()<.5)fx('smoke',dC,null,.5); } }
     if(d.wet&&!touching){ g.position.x-=frameVX*dt; g.position.z-=frameVZ*dt; }
     dC.copy(d.off).applyQuaternion(g.quaternion).add(g.position); d.cx=dC.x; d.cy=dC.y; d.cz=dC.z; for(let k=0;k<d.pts.length;k++)d.wp[k].copy(d.pts[k]).applyQuaternion(g.quaternion).add(g.position);
-    if(touching&&onWreck&&d.v.lengthSq()<.4&&d.w.lengthSq()<.06){ d.restT+=dt; if(d.restT>1){ d.rest=true; d.v.set(0,0,0); d.w.set(0,0,0); } } else d.restT=0; }
+    if(touching&&onWreck&&d.v.lengthSq()<.4&&d.w.lengthSq()<.06){ d.restT+=dt; if(d.restT>1){ d.rest=true; d.v.set(0,0,0); d.w.set(0,0,0); } }
+    else if(d.stick&&touching&&!onWreck&&debrisSettled(d,nC)){ d.restT+=dt; if(d.restT>1)debrisStick(d); } else d.restT=0; }
 }
+/* small pieces of a wrecked gun that have come to rest on a ship afloat lock onto her and ride with her, instead of being worked
+   against her decks every step. They come loose if she breaks up or founders, or something knocks them */
+function debrisSettled(d,nC){ let b=null; for(let i=0;i<nC;i++){ const c=DCON[i],cb=c.b||(c.o&&c.o.stuck&&c.o.stuck.b); if(cb&&cb.deadT===Infinity){ b=cb; break; } } if(!b)return false; d._sb=b;
+  _t1.copy(dC).sub(b.p); _t2.copy(b.w).cross(_t1).add(b.v).sub(d.v); return _t2.lengthSq()<.4&&_t3.copy(d.w).sub(b.w).lengthSq()<.15; }
+function debrisStick(d){ const b=d._sb; if(!b)return; _q.copy(b.q).invert(); d.stuck={b,lp:d.g.position.clone().sub(b.p).applyQuaternion(_q).add(b.cg),lq:_q.clone().multiply(d.g.quaternion)}; d.rest=true; d.v.set(0,0,0); d.w.set(0,0,0); }
+function debrisRide(d){ const S=d.stuck,b=S.b; if(b.deadT!==Infinity||!ship.bodies.includes(b)){ d.stuck=null; d.rest=false; d.restT=0; d.v.copy(b.v); return false; }
+  const g=d.g; g.position.copy(S.lp).sub(b.cg).applyQuaternion(b.q).add(b.p); g.quaternion.copy(b.q).multiply(S.lq);
+  dC.copy(d.off).applyQuaternion(g.quaternion).add(g.position); d.cx=dC.x; d.cy=dC.y; d.cz=dC.z; for(let k=0;k<d.pts.length;k++)d.wp[k].copy(d.pts[k]).applyQuaternion(g.quaternion).add(g.position); d.wpDone=false; return true; }
 /* other wreckage: a point inside another part's box is pushed out through that box's nearest face */
 function debrisVsDebris(d,P,n0,nC){ const cx=dC.x,cy=dC.y,cz=dC.z;
   for(const o of ship.debris){ if(o===d||o.cx===undefined)continue; const RR=d.R+o.R,ex=cx-o.cx,ey=cy-o.cy,ez=cz-o.cz; if(ex*ex+ey*ey+ez*ez>=RR*RR)continue; if(!o.he)continue;
     _qi.copy(o.g.quaternion).invert(); const h=o.he;
     for(let i=0;i<n0&&nC<DCON.length;i++){ _t1.copy(P[i]).sub(o.g.position).applyQuaternion(_qi).sub(o.off); const ax=h.x-Math.abs(_t1.x),ay=h.y-Math.abs(_t1.y),az=h.z-Math.abs(_t1.z); if(ax<=0||ay<=0||az<=0)continue;
       const c=DCON[nC++]; c.p.copy(P[i]); if(ax<=ay&&ax<=az){ c.n.set(Math.sign(_t1.x)||1,0,0); c.depth=ax; } else if(ay<=az){ c.n.set(0,Math.sign(_t1.y)||1,0); c.depth=ay; } else { c.n.set(0,0,Math.sign(_t1.z)||1); c.depth=az; }
-      c.n.applyQuaternion(o.g.quaternion); c.depth=Math.min(c.depth,1.5); c.b=null; c.part=null;
+      c.n.applyQuaternion(o.g.quaternion); c.depth=Math.min(c.depth,1.5); c.b=null; c.part=null; c.o=o;
       if(o.rest&&d.v.lengthSq()>16){ o.rest=false; o.restT=0; } } }
   return nC; }
 function debrisPairs(){}
@@ -2591,8 +2661,8 @@ function torpedoHit(body,x,side){ ship.stats.torp++;
 function bombHit(body,lp,ap,src){ ship.stats.bomb++; const shell=src==='shell';
   const tr=ship.turrets.find(t=>t.alive&&t.g.parent===body.group&&Math.abs(t.x-lp.x)<CLS.turretHit[0]&&Math.abs(lp.z)<CLS.turretHit[1]);
   body.world(lp.x,lp.y,lp.z,tmpV); const wp=tmpV.clone();
-  if(tr){ explode(wp,1.3,undefined,'bombhit'); tr.guns.forEach(g=>{ const d=tr.dir*rnd(-.1,.03),h=g.userData.home; g.rotation.z+=d; if(h){ const c=Math.cos(d),sn=Math.sin(d),x=h.x*c-h.y*sn,y=h.x*sn+h.y*c; h.set(x,y,h.z); g.position.copy(h); } }); const r=Math.random(),nm=CLS.gunName(tr.idx); ship.secDamage[tr.sec]+=.1; blast(body,lp,6,.5);
-    if(r<(ap?.2:.02)){log('Bomb penetrates '+nm+'. Flash reaches the magazine.'); detonate(tr.magIdx);} else if(r<.75){log('Bomb hits '+nm+'. Fire spreads down the hoists.'); magFire(tr.magIdx);} else log('Bomb hits '+nm+'. The armour holds.'); return; }
+  if(tr){ explode(wp,1.3,undefined,'bombhit'); tr.guns.forEach(g=>{ const d=tr.dir*rnd(-.1,.03),h=g.userData.home; g.rotation.z+=d; if(h){ const c=Math.cos(d),sn=Math.sin(d),x=h.x*c-h.y*sn,y=h.x*sn+h.y*c; h.set(x,y,h.z); g.position.copy(h); } }); const r=Math.random(),nm=CLS.gunName(tr.idx); ship.secDamage[tr.sec]+=.1; const blown=!tr.big&&mountBurst(tr.g,body,lp,.85,true); blast(body,lp,6,.5);
+    if(r<(ap?.2:.02)){log('Bomb penetrates '+nm+'. Flash reaches the magazine.'); detonate(tr.magIdx);} else if(r<.75){log('Bomb hits '+nm+(blown?'. The mount is blown apart and fire':'. Fire')+' spreads down the hoists.'); magFire(tr.magIdx);} else log('Bomb hits '+nm+(blown?'. The mount is blown apart.':'. The armour holds.')); return; }
   const deep=Math.random()<(ap?.65:.4); let supDone=false; { const P=supPartAt(body,lp,shell?3:2.5); if(P)supDone=supHit(body,P,lp,deep?(shell?'side':'pen'):(shell?'sideburst':'burst'),shell?.75:1); }
   const c1=compAt(body,lp.x,lp.y-Math.min(1.5,(LEVELS[3].y1-LEVELS[3].y0)*.5),lp.z); if(!c1){explode(wp,1,undefined,'bombhit');return;} const c2=deep?compAt(body,lp.x,c1.y0-1.5,lp.z):null, hit=c2&&c2!==c1&&c2.kind!=='tank'?c2:c1;
   const roof=Math.abs(lp.y-c1.y1)<1.2&&!c1.sup&&!supDone; addHole(c1,roof?new V3(lp.x,c1.y1,lp.z):lp.clone(),3.5,new V3(0,1,0),!roof,true); ignite(hit,.65,true); if(hit!==c1)rupture(c1,hit,3);
@@ -2741,7 +2811,8 @@ function stepShots(dt){
       if(s.t<=0){ship.shots.splice(i,1); if(s.miss)log('A torpedo runs wide.'); else if(s.body.deadT===Infinity)torpedoHit(s.body,s.x,s.side);} }
     else if(s.type==='bomb'){ const k=1-Math.max(0,s.t)/s.T; s.body.cache(); s.body.world(s.lp.x,s.lp.y,s.lp.z,tmpV); s.mesh.position.set(tmpV.x-60*(1-k),tmpV.y+420*(1-k)*(1-k)+260*(1-k),tmpV.z);
       if(s.t<=0){scene.remove(s.mesh);ship.shots.splice(i,1); if(s.body.deadT===Infinity)bombHit(s.body,s.lp,s.ap);} }
-    else if(s.type==='boom'&&s.t<=0){ explode(s.pos,s.size,undefined,s.kind); ship.shots.splice(i,1); } }
+    else if(s.type==='boom'&&s.t<=0){ explode(s.pos,s.size,undefined,s.kind); ship.shots.splice(i,1); }
+    else if(s.type==='cook'&&s.t<=0){ ship.shots.splice(i,1); if(s.body.deadT===Infinity)cookOff(s.body,s.lp,s.dp,s.nm); } }
   stepDebris(dt); debrisPairs(); if(ship.supportDirty)checkSupport();
 }
 function simulate(simDt){
@@ -2972,6 +3043,7 @@ function makeShipSave(){ const S=ship,L=liveBodies(),bi=b=>L.indexOf(b);
   const parts={}; for(const d of S.debris){ if(d.g.userData.pid==null||d.g.userData.pid<0)continue; const p=d.g.position,q=d.g.quaternion; parts[d.g.userData.pid]=['d',r2(p.x),r2(p.y),r2(p.z),r3(q.x),r3(q.y),r3(q.z),r3(q.w),d.rest?1:0]; }
   for(const g of S.boats||[])if(g.userData.gone&&!parts[g.userData.pid])parts[g.userData.pid]=['g']; for(const t of S.turrets)if(t.alive&&Math.abs(t.g.rotation.y)>.01)parts[t.g.userData.pid]=['r',r3(t.g.rotation.y)];
   for(const b of L)for(const p of b.parts)if(p.userData.charred)(parts[p.userData.pid]=parts[p.userData.pid]||['c']).push('ch');
+  for(const b of L)for(const p of b.parts)if(p.userData.burst)(parts[p.userData.pid]=parts[p.userData.pid]||['c']).push('bx');
   const conns={}; for(const cn of S.conns)if(cn.rupt>0||cn.jam||cn.stress>.01||cn.shored||cn.str<(cn.closable?7:cn.axis==='x'?15:cn.axis==='z'?12:9)-.01)conns[cn.a.id+'_'+cn.b.id]=[r2(cn.rupt),cn.jam?1:0,r3(cn.stress),cn.shored?1:0,r2(cn.str)];
   return {v:1,cls:CLS.id,name:CLS.name,when:Date.now(),scn:S.scn?{id:S.scn.id,t:r2(S.scn.t),phase:S.scn.phase,done:S.scn.done,after:S.scn.after||0,gq:!!S.scn.gq,d:S.scn.d?{hitT:S.scn.d.hitT,clear:true,missed:!!S.scn.d.missed,warned:S.scn.d.warned||1,acted:true,gashes:S.scn.d.gashes||[],len:S.scn.d.len||0}:null}:null,
     simT:r2(simT),hold:S.holdFast?1:0,H:sea.targetH,dir:sea.dir,depth:-SEABED,userDepth,zebra,auto:S.dc.auto,tel:S.telegraph,rud:r2(S.rudder),rudOrd:S.rudderOrd,speed:r2(S.speed),yaw:r3(S.yaw||0),dX:r2(S.driftX),dZ:r2(S.driftZ),stats:S.stats,secDamage:S.secDamage.map(r2),secBroken:S.secBroken,breaks:S.breaks,dents:S.dents.map(d=>[r2(d.x),r2(d.y),r2(d.z),d.R,d.depth]),magWarned:S.magWarned,
@@ -3010,7 +3082,7 @@ function loadShipState(D){ const S=ship;
   for(const k in D.conns){ const cn=S.connMap.get(k),a=D.conns[k]; if(cn){cn.rupt=a[0];cn.jam=!!a[1];cn.stress=a[2];cn.shored=!!a[3];cn.str=a[4];} }
   for(const h of D.holes){ const c=S.comps[h.c],H=addHole(c,new V3(...h.p),h.a0,h.n?new V3(...h.n):null,!!h.h,!!h.sc); H.area=h.a; H.bornT=0; if(h.pt){H.patched=true; holePatched(H);} } for(const i of D.jam)if(S.holes[i])S.holes[i].jam=true;
   const L=liveBodies(),byPid=new Map(); for(const b of L)for(const p of b.parts)byPid.set(p.userData.pid,[p,b]);
-  for(const pid in D.parts){ const e=byPid.get(+pid),a=D.parts[pid]; if(!e)continue; const [p,b]=e; if(a.includes('ch'))charPart(p);
+  for(const pid in D.parts){ const e=byPid.get(+pid),a=D.parts[pid]; if(!e)continue; const [p,b]=e; if(a.includes('bx'))mountBurstFx(p,b,null,0,1,true); if(a.includes('ch'))charPart(p);
     if(a[0]==='d'){ blowOff(p,b,new V3(),new V3(),true); p.position.set(a[1],a[2],a[3]); p.quaternion.set(a[4],a[5],a[6],a[7]).normalize(); const d=S.debris[S.debris.length-1]; d.rest=!!a[8]; d.wet=a[2]<0; d.age=9; d.hit=true; d.bornT=0; }
     else if(a[0]==='g'){ p.userData.gone=true; b.group.remove(p); b.parts.splice(b.parts.indexOf(p),1); } else if(a[0]==='r')p.rotation.y=a[1]; }
   S.supportDirty=false;
@@ -3484,7 +3556,7 @@ function qualInit(){ let v='auto'; try{ v=localStorage.getItem('dc-quality')||'a
 /* ---------- feedback and bug reports. In the claude.ai version a report is saved to this page's database, where only the owner
    can read the lot (each player can see their own); on the website it goes to a Google Form. Either way it carries the game's
    state so a bug can be found again. ---------- */
-const GAME_VER='v29';
+const GAME_VER='v30';
 /* the Google Form for the website version: paste the form's formResponse address and its entry ids here */
 const FB_FORM={action:'',kind:'',text:'',name:'',info:''};
 let fbUser=null,fbUid=null,fbOwner=false,fbInboxN=0;
