@@ -520,6 +520,7 @@ function mpApplyEv(e){ const S=e.s>=0?FLEET.ships[e.s]:null; if(S)useShip(S);
     case 'wk': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ wreckFx(p); if(p.userData.onGone){ const f=p.userData.onGone; p.userData.onGone=null; f(); } break; } } break; }
     case 'shp': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const n0=ship.debris.length; quietLog=true; try{ shatterPart(p,b,new V3(e.p[0],e.p[1],e.p[2]),e.pw,e.sd); } finally{ quietLog=false; } for(let i=n0;i<ship.debris.length;i++){ const d=ship.debris[i]; d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=d.v.clone(); d._tT=MP.tHost; d._cr=false; } break; } } break; }
     case 'gx': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const n0=ship.debris.length; quietLog=true; try{ mountBurstFx(p,b,new V3(e.p[0],e.p[1],e.p[2]),e.pw,e.sd); } finally{ quietLog=false; } for(let i=n0;i<ship.debris.length;i++){ const d=ship.debris[i]; d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=d.v.clone(); d._tT=MP.tHost; d._cr=false; } break; } } break; }
+    case 'tx': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const n0=ship.debris.length; turretBurstFx(p,b,e.sd); for(let i=n0;i<ship.debris.length;i++){ const d=ship.debris[i]; d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=d.v.clone(); d._tT=MP.tHost; d._cr=false; } break; } } break; }
     case 'bo': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ const v0=e.v?new V3(e.v[0],e.v[1],e.v[2]):new V3(); quietLog=true; try{ blowOff(p,b,v0.clone(),new V3(),true); } finally{ quietLog=false; } const d=ship.debris[ship.debris.length-1]; if(d){ d.rest=true; d._tp=d.g.position.clone(); d._tp0=d._tp.clone(); d._tq=d.g.quaternion.clone(); d._tv=v0; d._tT=MP.tHost; d._cr=false; } break; } } break; }
     case 'ch': { for(const b of ship.bodies){ const p=b.parts.find(p=>p.userData.pid===e.pid); if(p){ charPart(p); break; } } break; }
     case 'x': explode(new V3(e.p[0],e.p[1],e.p[2]),e.z,false,e.k); break;
@@ -1244,7 +1245,7 @@ function bigTurret(g,dir,bh,k,sty){ const p=TSTY[sty],L=p.L*k,W=p.W*k,H=p.H*k,sh
   const bgeo=gcache('tb_'+sty+k,()=>barrelGeo(p.r0*k,p.r1*k,len)),baggeo=gcache('tg_'+sty+k,()=>new THREE.CylinderGeometry(p.r1*k*1.08,p.r1*k*2.1,bagL,12));
   const pv=faceX-.3*k,cr=new THREE.Group(); cr.position.set(dir*pv,bh+p.by*k,0); g.add(cr); const guns=[],tips=[];
   for(let i=0;i<p.n;i++){ const z=(i-(p.n-1)/2)*p.sp*k*(p.n===2?2:1),br=new THREE.Mesh(bgeo,M.dark); br.rotation.z=-dir*Math.PI/2; br.position.set(dir*(cx-pv),0,z); const bag=new THREE.Mesh(baggeo,MCAN); bag.position.y=-len/2+.55*k+bagL/2; br.add(bag); cr.add(br); guns.push(br); br.userData.home=br.position.clone(); tips.push(new V3(dir*(p.muz*k-pv),0,z)); }
-  cr.rotation.z=dir*.05; g.userData.aimRig={type:'tur',dir,el:cr,tips,guns,ax:new V3(dir,0,0),recoil:1.3*k};
+  cr.rotation.z=dir*.05; g.userData.aimRig={type:'tur',dir,el:cr,tips,guns,ax:new V3(dir,0,0),recoil:1.3*k}; g.userData.tdim={sty,k,dir,bh,hs,cr,bb};
   return guns; }
 /* a twin secondary mount on the beam: base ring, enclosed gunhouse facing outboard, two barrels with blast bags */
 function secHouse(g,sg,Lx,H,Dz,sp,bl,by,bz,r0,r1){ const key='sm_'+Lx+'_'+H+'_'+Dz+'_'+bl,sh={face:Dz*.24,y1:.5,roof:Dz*.12,side:.3,rx:Lx*.3,ch:.45,back:0},hh=H-.3;
@@ -1746,6 +1747,31 @@ function cookOff(body,lp,dp,nm){ body.world(lp.x,lp.y,lp.z,tmpV); const wp=tmpV.
   let lost=0; for(const f of ship.crew.figs)if(f.state==='deck'&&f.body===body&&Math.hypot(f.lx-lp.x,f.lz-lp.z)<(dp?6:4)){f.state='gone';ship.crew.dead+=f.n;lost+=f.n;}
   const c=compAt(body,lp.x,lp.y-1.5,lp.z); if(c&&Math.random()<(dp?.5:.25))ignite(c,.4,true);
   blast(body,lp,dp?5:3.5,dp?.45:.3); log('Ready ammunition at the '+nm+' cooks off.'+lostMsg(lost)); }
+/* ---------- a magazine going up under a main turret bursts it apart: roof, face, side and rear armour, the rangefinder, the cradle and
+   each gun go up on the column of flame and come down where they come down. The torn barbette ring stays behind ---------- */
+function turretBurstFx(g,body,seed,noThrow){ const T=g.userData.tdim; if(!T||g.userData.burst||g.userData.gone)return; fragSeed=seed||1; g.userData.burst=true; g.userData.wrecked=true;
+  const p=TSTY[T.sty],k=T.k,L=p.L*k,W=p.W*k,H=p.H*k,hs=T.hs,cr=T.cr,pieces=[]; body.group.updateMatrixWorld(true); g.updateMatrixWorld(true);
+  const take=(o,label,heavy)=>{ o.traverse(q=>{ if(q.isMesh&&q.material&&!Array.isArray(q.material)&&q.material!==MCAN)q.material=charOf(q.material); }); o.userData.label=label; o.userData.heavy=!!heavy; pieces.push(o); };
+  const plate=(w,h,d,x,y,z,label)=>{ const m=new THREE.Mesh(tornBox(w,h,d),M.sup); m.userData.ownGeo=true; m.position.set(x,y,z); m.rotation.set(frnd(-.08,.08),frnd(-.08,.08),frnd(-.08,.08)); hs.add(m); m.updateMatrixWorld(true); take(m,label,true); };
+  plate(L*.75,.5*k,W*.8,-L*.05,H-.25*k,0,'turret roof plate');
+  plate(.7*k,H*.85,W*.7,L/2-p.sh.face*k*.6,H*.45,0,'turret face plate');
+  for(const sg of [-1,1])plate(L*.6,H*.8,.45*k,-L*.05,H*.42,sg*(W/2-.4*k),'turret side plate');
+  plate(.5*k,H*.7,W*.6,-L/2+.5*k,H*.4,0,'turret rear plate');
+  { const rf=p.rf==='side'?new THREE.Mesh(gcache('trf_'+T.sty+k,()=>new THREE.CylinderGeometry(p.rfr*k,p.rfr*k,p.rfl*k,12)),M.dark):new THREE.Mesh(gcache('trfb_'+T.sty+k,()=>new THREE.BoxGeometry(1.8*k,1.2*k,p.rfl*k)),M.dark);
+    if(p.rf==='side')rf.rotation.x=Math.PI/2; rf.position.set(p.rfx*k,p.rfy*k,0); hs.add(rf); rf.updateMatrixWorld(true); take(rf,'rangefinder',false); }
+  for(const br of g.userData.aimRig.guns)take(br,'gun barrel',true);
+  { const n=g.userData.aimRig.guns.length,c=new THREE.Mesh(gcache('tcr_'+T.sty+k,()=>new THREE.BoxGeometry(2.6*k,1.6*k,(n-1)*p.sp*k*(n===2?2:1)+2.6*k)),M.dark); cr.add(c); c.updateMatrixWorld(true); take(c,'gun cradle',true); }
+  if(noThrow){ for(const m of pieces)if(m.parent)m.parent.remove(m); }
+  else { const qi=body.group.getWorldQuaternion(new THREE.Quaternion()).invert(),gc=g.getWorldPosition(new V3());
+    for(const m of pieces){ scene.attach(m); m.updateMatrixWorld(true); const out=m.getWorldPosition(new V3()).sub(gc); out.y=0; if(out.lengthSq()<.01)out.set(frnd(-1,1),0,frnd(-1,1)); out.normalize();
+      const v=out.multiplyScalar(frnd(4,14)).add(new V3(frnd(-5,5),frnd(24,50),frnd(-6,6))).add(body.v),D=makeDebris(m,v,new V3(frnd(-1.6,1.6),frnd(-.8,.8),frnd(-1.6,1.6)),false);
+      D.home={body,pos:body.group.worldToLocal(m.position.clone()),quat:qi.clone().multiply(m.quaternion),xrayOnly:false}; D.ghost=.3; D.stick=true; ship.debris.push(D); } }
+  // what stays: the barbette, its top torn ragged
+  for(const q of g.children.slice())if(q!==T.bb)g.remove(q); g.userData.holes=[];
+  T.bb.geometry=raggedTubGeo(p.bR*k,T.bh,seed%97); T.bb.userData.ownGeo=true; T.bb.material=charDS(M.dark);
+  charPart(g); g.userData.bb=partBB(g,body); ship.supportDirty=true; if(g.userData.onGone){ const f=g.userData.onGone; g.userData.onGone=null; f(); }
+  if(!noThrow){ const c=g.getWorldPosition(new V3()).add(new V3(0,T.bh,0)); spawnFrags(body,c,new V3(0,1,0),Math.round(14*FXQ)+3,34,M.dark,true); } }
+function turretBurst(tr,body){ const seed=1+((Math.random()*2147483000)|0); if(MP.rec)mpEv({e:'tx',s:body.S.idx,pid:tr.g.userData.pid,sd:seed}); turretBurstFx(tr.g,body,seed); }
 /* when a structure goes, the marks of hits on the rooms inside it go too */
 function hideSupMarks(body,bx){ for(const h of ship.holes){ if(!h.marker||!h.c||!h.c.sup||h.c.body!==body)continue; const c=h.c; if(c.xc>bx.x0&&c.xc<bx.x1&&c.yc>bx.y0&&c.yc<bx.y1){ h.marker.visible=false; if(h.interior)h.interior.g.visible=false; } } }
 
@@ -1774,6 +1800,8 @@ function blast(body,lp,R,power,filter,big){ let n=0; if(!filter)for(const cn of 
     const B=p.userData.bb,mx=B?Math.max(B.max.x-B.min.x,B.max.y-B.min.y,B.max.z-B.min.z):0,isT=ship.turrets.some(t=>t.g===p);
     if(!filter&&!big){ if(!isT&&!ship.mach.includes(p)&&(p.userData.onGone||mx<4))wreckPart(p,body,lp,power); continue; }
     if(!filter&&big&&p.userData.aimRig&&mountBurst(p,body,lp,power,true)){ n++; continue; }
+    if(!filter&&big&&p.userData.burst)continue; // what is left of a burst gun stays where it is
+    if(!filter&&big&&isT&&p.userData.tdim){ if(!p.userData.burst)wreckPart(p,body,lp,power); continue; } // a main turret beside the blast is wrecked where it stands
     if(!filter&&big&&!isT&&mx>2.5){ if(shatter(p,body,lp,power))n++; continue; }
     const v=new V3(q.x-lp.x,Math.abs(q.y-lp.y)+5,q.z-lp.z).normalize().multiplyScalar(rnd(9,24)*Math.sqrt(power)).applyQuaternion(body.q).add(body.v); blowOff(p,body,v); n++; } if(!filter)blastDents(body,lp,R,power); return n; }
 
@@ -2681,7 +2709,7 @@ function detonate(ti){
   ship.secDamage[sec]=2; body.resting=false;
   const x=SECS[sec][1]*.5+SECS[sec][2]*.5; body.world(x,DECK0-3,0,tmpV); const wp=tmpV.clone(); explode(wp,CLS.magBlast>40?4.5:3,undefined,'mag');
   for(let i=1;i<5;i++)ship.shots.push({type:'boom',t:i*.35,pos:wp.clone().add(new V3(rnd(-14,14),rnd(0,25),rnd(-9,9))),size:rnd(2,3.5)});
-  for(const tr of ship.turrets)if(tr.alive&&tr.magIdx===ti)blowOff(tr.g,body,new V3(rnd(-8,8),rnd(30,52),rnd(-10,10)).add(body.v),new V3(rnd(-1,1),0,rnd(-1.4,1.4)));
+  for(const tr of ship.turrets)if(tr.alive&&tr.magIdx===ti){ if(tr.g.userData.tdim)turretBurst(tr,body); else if(!mountBurst(tr.g,body,tr.g.position.clone(),1.5,true))blowOff(tr.g,body,new V3(rnd(-8,8),rnd(30,52),rnd(-10,10)).add(body.v),new V3(rnd(-1,1),0,rnd(-1.4,1.4))); }
   blast(body,new V3(x,DECK0-3,0),CLS.magBlast,1.5,null,true);
   for(const f of ship.crew.figs)if(f.state==='deck'&&Math.abs(f.lx-x)<40&&Math.random()<.8){f.state='gone';ship.crew.dead+=f.n;lost+=f.n;}
   log('The '+CLS.mags[ti].toLowerCase()+' detonates. The hull is torn open.'+lostMsg(lost));
@@ -3040,7 +3068,7 @@ const r2=v=>Math.round(v*100)/100, r3=v=>Math.round(v*1000)/1000, V=a=>[r2(a.x),
 function b64(u8){ let s=''; for(let i=0;i<u8.length;i+=0x8000)s+=String.fromCharCode.apply(null,u8.subarray(i,i+0x8000)); return btoa(s); }
 function unb64(t){ const s=atob(t),u=new Uint8Array(s.length); for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i); return u; }
 function makeShipSave(){ const S=ship,L=liveBodies(),bi=b=>L.indexOf(b);
-  const parts={}; for(const d of S.debris){ if(d.g.userData.pid==null||d.g.userData.pid<0)continue; const p=d.g.position,q=d.g.quaternion; parts[d.g.userData.pid]=['d',r2(p.x),r2(p.y),r2(p.z),r3(q.x),r3(q.y),r3(q.z),r3(q.w),d.rest?1:0]; }
+  const parts={}; for(const d of S.debris){ if(d.g.userData.pid==null||d.g.userData.pid<0)continue; const p=d.g.position,q=d.g.quaternion; parts[d.g.userData.pid]=['d',r2(p.x),r2(p.y),r2(p.z),r3(q.x),r3(q.y),r3(q.z),r3(q.w),d.rest?1:0]; if(d.g.userData.burst)parts[d.g.userData.pid].push('bx'); }
   for(const g of S.boats||[])if(g.userData.gone&&!parts[g.userData.pid])parts[g.userData.pid]=['g']; for(const t of S.turrets)if(t.alive&&Math.abs(t.g.rotation.y)>.01)parts[t.g.userData.pid]=['r',r3(t.g.rotation.y)];
   for(const b of L)for(const p of b.parts)if(p.userData.charred)(parts[p.userData.pid]=parts[p.userData.pid]||['c']).push('ch');
   for(const b of L)for(const p of b.parts)if(p.userData.burst)(parts[p.userData.pid]=parts[p.userData.pid]||['c']).push('bx');
@@ -3082,7 +3110,7 @@ function loadShipState(D){ const S=ship;
   for(const k in D.conns){ const cn=S.connMap.get(k),a=D.conns[k]; if(cn){cn.rupt=a[0];cn.jam=!!a[1];cn.stress=a[2];cn.shored=!!a[3];cn.str=a[4];} }
   for(const h of D.holes){ const c=S.comps[h.c],H=addHole(c,new V3(...h.p),h.a0,h.n?new V3(...h.n):null,!!h.h,!!h.sc); H.area=h.a; H.bornT=0; if(h.pt){H.patched=true; holePatched(H);} } for(const i of D.jam)if(S.holes[i])S.holes[i].jam=true;
   const L=liveBodies(),byPid=new Map(); for(const b of L)for(const p of b.parts)byPid.set(p.userData.pid,[p,b]);
-  for(const pid in D.parts){ const e=byPid.get(+pid),a=D.parts[pid]; if(!e)continue; const [p,b]=e; if(a.includes('bx'))mountBurstFx(p,b,null,0,1,true); if(a.includes('ch'))charPart(p);
+  for(const pid in D.parts){ const e=byPid.get(+pid),a=D.parts[pid]; if(!e)continue; const [p,b]=e; if(a.includes('bx')){ if(p.userData.tdim)turretBurstFx(p,b,1,true); else mountBurstFx(p,b,null,0,1,true); } if(a.includes('ch'))charPart(p);
     if(a[0]==='d'){ blowOff(p,b,new V3(),new V3(),true); p.position.set(a[1],a[2],a[3]); p.quaternion.set(a[4],a[5],a[6],a[7]).normalize(); const d=S.debris[S.debris.length-1]; d.rest=!!a[8]; d.wet=a[2]<0; d.age=9; d.hit=true; d.bornT=0; }
     else if(a[0]==='g'){ p.userData.gone=true; b.group.remove(p); b.parts.splice(b.parts.indexOf(p),1); } else if(a[0]==='r')p.rotation.y=a[1]; }
   S.supportDirty=false;
@@ -3556,22 +3584,25 @@ function qualInit(){ let v='auto'; try{ v=localStorage.getItem('dc-quality')||'a
 /* ---------- feedback and bug reports. In the claude.ai version a report is saved to this page's database, where only the owner
    can read the lot (each player can see their own); on the website it goes to a Google Form. Either way it carries the game's
    state so a bug can be found again. ---------- */
-const GAME_VER='v30';
+const GAME_VER='v31';
 /* the Google Form for the website version: paste the form's formResponse address and its entry ids here */
 const FB_FORM={action:'',kind:'',text:'',name:'',info:''};
+/* on the website, reports go to its own server, which files each one as an issue in the game's GitHub repository */
+const FB_API=/^https?:$/.test(location.protocol)&&!IN_CLAUDE?'/api/feedback':'';
 let fbUser=null,fbUid=null,fbOwner=false,fbInboxN=0;
 function fbInfo(){ const S=FLEET.active||ship,ua=navigator.userAgent||'',os=/CrOS/.test(ua)?'ChromeOS':/Windows/.test(ua)?'Windows':/Mac OS/.test(ua)?'Mac':/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS':/Linux/.test(ua)?'Linux':'other',br=/Edg\//.test(ua)?'Edge':/Chrome\//.test(ua)?'Chrome':/Firefox\//.test(ua)?'Firefox':/Safari\//.test(ua)?'Safari':'other';
   const logs=[...document.querySelectorAll('#log li')].slice(0,8).map(l=>l.textContent.slice(0,160));
   return {ver:GAME_VER,ship:S?S.cls:'',fleet:FLEET.ships.map(x=>x.cls).join('+'),mode:MP.started?(isClient()?'pvp-client':'pvp-host'):(ship&&ship.scn?'scenario:'+ship.scn.id:'sandbox'),battle:(ship&&ship.battle&&ship.battle.mode)||'',t:Math.round(simT),
     bodies:S?S.bodies.filter(b=>b.deadT===Infinity).length:0,quality:QS.pick+'/'+QS.cur,fps:Math.round(1000/Math.max(1,QS.ema)),screen:window.innerWidth+'x'+window.innerHeight+'@'+(window.devicePixelRatio||1),os,browser:br,logs}; }
-function fbOpen(){ $('fbDlg').hidden=false; $('fbMsg').textContent=''; $('fbText').focus(); $('fbWhere').textContent=dbCap&&fbUid?'Your report is saved for the game\'s maker to read.':FB_FORM.action?'Your report is sent to the game\'s feedback form.':'Your report will be copied so you can paste it to the game\'s maker.'; }
+function fbOpen(){ $('fbDlg').hidden=false; $('fbMsg').textContent=''; $('fbText').focus(); $('fbWhere').textContent=dbCap&&fbUid?'Your report is saved for the game\'s maker to read.':FB_API?'Your report is posted on the game\'s public GitHub page for its maker to read, with your name if you give one.':FB_FORM.action?'Your report is sent to the game\'s maker.':'Your report will be copied so you can paste it to the game\'s maker.'; }
 function fbClose(){ $('fbDlg').hidden=true; }
 async function fbSend(){ const text=$('fbText').value.trim().slice(0,2000); if(text.length<3){ $('fbMsg').textContent='Write a few words first.'; return; }
   const kind=$('fbKind').value,name=$('fbName').value.trim().slice(0,40),info=$('fbInc').checked?fbInfo():{ver:GAME_VER}; $('fbSend').disabled=true; $('fbMsg').textContent='Sending…';
   try{
     if(dbCap&&fbUid){ const me=dbCap.doc('feedback/'+fbUid); await me.collection('reports').add({kind,text,name,info,when:Date.now(),done:false}); try{ await me.set({last:Date.now(),name}); }catch(e){} }
     else if(FB_FORM.action){ const fd=new URLSearchParams(); fd.append(FB_FORM.kind,kind); fd.append(FB_FORM.text,text); if(FB_FORM.name)fd.append(FB_FORM.name,name); fd.append(FB_FORM.info,JSON.stringify(info)); await fetch(FB_FORM.action,{method:'POST',mode:'no-cors',body:fd}); }
-    else { const t='Damage Control '+kind+(name?' from '+name:'')+':\n'+text+'\n\n'+JSON.stringify(info,null,1); await navigator.clipboard.writeText(t); $('fbMsg').textContent='Copied. Paste it in a message to the game\'s maker.'; $('fbSend').disabled=false; return; }
+    else { let sent=false; if(FB_API){ const r=await fetch(FB_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,text,name,info})}); if(r.status===429){ $('fbMsg').textContent='That is a lot of reports at once. Try again in a few minutes.'; $('fbSend').disabled=false; return; } sent=r.ok; }
+      if(!sent){ const t='Damage Control '+kind+(name?' from '+name:'')+':\n'+text+'\n\n'+JSON.stringify(info,null,1); await navigator.clipboard.writeText(t); $('fbMsg').textContent='Copied. Paste it in a message to the game\'s maker.'; $('fbSend').disabled=false; return; } }
     $('fbText').value=''; $('fbMsg').textContent='Thanks! Sent.'; setTimeout(fbClose,1200); }
   catch(e){ $('fbMsg').textContent=e&&e.code==='invalid_argument'?'You can play here but not send reports from this view.':'It could not be sent. Try again in a moment.'; }
   $('fbSend').disabled=false; }
