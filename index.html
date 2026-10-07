@@ -3584,12 +3584,12 @@ function qualInit(){ let v='auto'; try{ v=localStorage.getItem('dc-quality')||'a
 /* ---------- feedback and bug reports. In the claude.ai version a report is saved to this page's database, where only the owner
    can read the lot (each player can see their own); on the website it goes to a Google Form. Either way it carries the game's
    state so a bug can be found again. ---------- */
-const GAME_VER='v31';
+const GAME_VER='v31.1';
 /* the Google Form for the website version: paste the form's formResponse address and its entry ids here */
 const FB_FORM={action:'',kind:'',text:'',name:'',info:''};
 /* on the website, reports go to its own server, which files each one as an issue in the game's GitHub repository */
 const FB_API=/^https?:$/.test(location.protocol)&&!IN_CLAUDE?'/api/feedback':'';
-let fbUser=null,fbUid=null,fbOwner=false,fbInboxN=0;
+let fbWhy='',fbUser=null,fbUid=null,fbOwner=false,fbInboxN=0;
 function fbInfo(){ const S=FLEET.active||ship,ua=navigator.userAgent||'',os=/CrOS/.test(ua)?'ChromeOS':/Windows/.test(ua)?'Windows':/Mac OS/.test(ua)?'Mac':/Android/.test(ua)?'Android':/iPhone|iPad/.test(ua)?'iOS':/Linux/.test(ua)?'Linux':'other',br=/Edg\//.test(ua)?'Edge':/Chrome\//.test(ua)?'Chrome':/Firefox\//.test(ua)?'Firefox':/Safari\//.test(ua)?'Safari':'other';
   const logs=[...document.querySelectorAll('#log li')].slice(0,8).map(l=>l.textContent.slice(0,160));
   return {ver:GAME_VER,ship:S?S.cls:'',fleet:FLEET.ships.map(x=>x.cls).join('+'),mode:MP.started?(isClient()?'pvp-client':'pvp-host'):(ship&&ship.scn?'scenario:'+ship.scn.id:'sandbox'),battle:(ship&&ship.battle&&ship.battle.mode)||'',t:Math.round(simT),
@@ -3601,8 +3601,8 @@ async function fbSend(){ const text=$('fbText').value.trim().slice(0,2000); if(t
   try{
     if(dbCap&&fbUid){ const me=dbCap.doc('feedback/'+fbUid); await me.collection('reports').add({kind,text,name,info,when:Date.now(),done:false}); try{ await me.set({last:Date.now(),name}); }catch(e){} }
     else if(FB_FORM.action){ const fd=new URLSearchParams(); fd.append(FB_FORM.kind,kind); fd.append(FB_FORM.text,text); if(FB_FORM.name)fd.append(FB_FORM.name,name); fd.append(FB_FORM.info,JSON.stringify(info)); await fetch(FB_FORM.action,{method:'POST',mode:'no-cors',body:fd}); }
-    else { let sent=false; if(FB_API){ const r=await fetch(FB_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,text,name,info})}); if(r.status===429){ $('fbMsg').textContent='That is a lot of reports at once. Try again in a few minutes.'; $('fbSend').disabled=false; return; } sent=r.ok; }
-      if(!sent){ const t='Damage Control '+kind+(name?' from '+name:'')+':\n'+text+'\n\n'+JSON.stringify(info,null,1); await navigator.clipboard.writeText(t); $('fbMsg').textContent='Copied. Paste it in a message to the game\'s maker.'; $('fbSend').disabled=false; return; } }
+    else { let sent=false; if(FB_API){ const r=await fetch(FB_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind,text,name,info})}); if(r.status===429){ $('fbMsg').textContent='That is a lot of reports at once. Try again in a few minutes.'; $('fbSend').disabled=false; return; } sent=r.ok; if(!sent){ let j={}; try{ j=await r.json(); }catch(e){} fbWhy=r.status===503?'the website cannot see its GitHub token':r.status===403&&!j.gh?'reports are not accepted from this address ('+location.hostname+')':j.gh===401?'GitHub says the token is wrong or has expired':j.gh===403||j.gh===404?'GitHub says the token is not allowed to file issues on this repository':j.gh?'GitHub answered '+j.gh+(j.msg?' ('+j.msg+')':''):r.status===400?'the server could not read the report':'the server answered '+r.status; } }
+      if(!sent){ const t='Damage Control '+kind+(name?' from '+name:'')+':\n'+text+'\n\n'+JSON.stringify(info,null,1); await navigator.clipboard.writeText(t); $('fbMsg').textContent=(fbWhy?'Not sent: '+fbWhy+'. ':'')+'Copied. Paste it in a message to the game\'s maker.'; fbWhy=''; $('fbSend').disabled=false; return; } }
     $('fbText').value=''; $('fbMsg').textContent='Thanks! Sent.'; setTimeout(fbClose,1200); }
   catch(e){ $('fbMsg').textContent=e&&e.code==='invalid_argument'?'You can play here but not send reports from this view.':'It could not be sent. Try again in a moment.'; }
   $('fbSend').disabled=false; }
